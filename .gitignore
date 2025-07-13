@@ -1,0 +1,12 @@
+# Virtual environment
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# SQLite database
+db.sqlite3
+
+# VS Code settings (optional)
+.vscode/
