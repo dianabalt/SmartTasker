@@ -24,7 +24,7 @@
 - **Backend**: Django
 - **Frontend**: HTML, CSS, JavaScript
 - **Database**: SQLite
-- **Version control and colloboration**: GitHub 
+- **Version control and collaboration**: GitHub 
 
 ## Team Members
 - Diana Balteanu
