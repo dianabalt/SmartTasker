@@ -1,13 +1,9 @@
 from django.db import models
-from tasks.models import Task  # assumes Task model exists
+from tasks.models import Task  
 
 class Timer(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='timers')
-    duration = models.IntegerField(default=0, help_text="Time in seconds")
-    is_active = models.BooleanField(default=False)
-    is_paused = models.BooleanField(default=False)
-    started_at = models.DateTimeField(null=True, blank=True)
-    paused_at = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(help_text="Duration in seconds")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
