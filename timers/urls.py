@@ -1,9 +1,10 @@
-from django.urls import path
-from . import views
+from django.contrib import admin
+from django.urls import path, include  
 
 urlpatterns = [
-    path('start/<int:timer_id>/', views.start_timer, name='start_timer'),
-    path('pause/<int:timer_id>/', views.pause_timer, name='pause_timer'),
-    path('stop/<int:timer_id>/', views.stop_timer, name='stop_timer'),
+    path('admin/', admin.site.urls),
+    path('tasks/', include('tasks.urls')),       
+    path('dashboard/', include('dashboard.urls')), 
+    path('accounts/', include('accounts.urls')),    
+    path('timers/', include('timers.urls')),     
 ]
-
