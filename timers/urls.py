@@ -1,5 +1,10 @@
-from django.urls import path
+from django.contrib import admin
+from django.urls import path, include  
 
 urlpatterns = [
-    # Add timer-related URL patterns here
+    path('admin/', admin.site.urls),
+    path('tasks/', include('tasks.urls')),       
+    path('dashboard/', include('dashboard.urls')), 
+    path('accounts/', include('accounts.urls')),    
+    path('timers/', include('timers.urls')),     
 ]
