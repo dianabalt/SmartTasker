@@ -11,7 +11,7 @@ class TimerAdmin(admin.ModelAdmin):
     actions = ['mark_as_completed', 'reset_timers']
 
     def formatted_elapsed_time(self, obj):
-        minutes, seconds = divmod(obj.elapsed_time * 60, 60)
+        minutes, seconds = divmod(obj.elapsed_time, 60)
         return f"{minutes:02}:{seconds:02}"
     formatted_elapsed_time.short_description = "Elapsed Time"
 
