@@ -3,7 +3,7 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('home/', views.home, name='home'),  # ← updated this line
+    path('home/', views.home, name='home'),
     path('daily/', views.daily_tasks, name='daily_tasks'),
     path('weekly/', views.weekly_tasks, name='weekly_tasks'),
     path('edit/<int:task_id>/', views.edit_task, name='edit_task'),

@@ -15,7 +15,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             padding: 30px 20px;
         }
@@ -30,15 +30,7 @@
             margin-bottom: 5px;
         }
 
-        .section-title {
-            font-size: 1.5em;
-            margin-top: 30px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #00BFFF;
-            padding-bottom: 5px;
-        }
-
-        .add-task-btn, .edit-btn, .save-btn {
+        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
             background-color: #00BFFF;
             color: white;
             border: none;
@@ -46,16 +38,11 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            margin-right: 8px;
         }
 
         .delete-btn {
             background-color: #ff4d4d;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
         }
 
         .task-form-container {
@@ -63,6 +50,8 @@
             padding: 30px;
             border-radius: 15px;
             color: black;
+            margin-bottom: 30px;
+            display: none;
         }
 
         .task-form-container input,
@@ -80,6 +69,17 @@
             padding: 0;
         }
 
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .time-input-group input {
+            width: 100px;
+        }
+
         .task-form-container button {
             margin-top: 10px;
             margin-right: 10px;
@@ -94,9 +94,9 @@
             padding: 20px;
             margin-bottom: 15px;
             display: flex;
-            align-items: flex-start;
             justify-content: space-between;
             gap: 15px;
+            transition: opacity 0.3s ease;
         }
 
         .task-card.completed {
@@ -111,13 +111,6 @@
             text-decoration: line-through;
         }
 
-        .category-symbol {
-            font-size: 18px;
-            font-weight: bold;
-            margin-right: 10px;
-            white-space: nowrap;
-        }
-
         .task-details {
             flex-grow: 1;
         }
@@ -125,12 +118,10 @@
         .task-title {
             font-weight: bold;
             font-size: 18px;
-            margin-bottom: 4px;
         }
 
         .task-desc {
             font-size: 14px;
-            margin-bottom: 8px;
         }
 
         .date-info {
@@ -138,8 +129,35 @@
             color: #333;
         }
 
-        .action-buttons {
-            margin-top: 10px;
+        .day-header {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .check-circle.completed {
+            background-color: #32CD32;
+            border-color: darkgreen;
+        }
+
+        .check-circle span {
+            color: darkgreen;
+            font-size: 16px;
         }
 
         .edit-form {
@@ -147,36 +165,28 @@
             margin-top: 10px;
         }
 
-        .check-circle {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid #444;
-            background-color: white;
+        .category-symbol {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .navbar {
+            background-color: #1c2448;
+            padding: 12px 30px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .check-circle:hover {
-            border-color: #00BFFF;
-        }
-
-        .check-circle.completed {
-            background-color: #32CD32;
-            border-color: #228B22;
-        }
-
-        .check-circle.completed span {
+        .navbar a {
             color: white;
-            font-size: 16px;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
         }
 
-        .check-circle span {
-            color: black;
-            font-size: 16px;
+        .navbar a:hover {
+            text-decoration: underline;
         }
 
         .filter-box {
@@ -203,50 +213,9 @@
             font-weight: bold;
             font-size: 14px;
         }
-        .navbar {
-            background-color: #1c2448;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
 
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: bold;
-        }
-
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-        .option-boxes {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .option {
-            background-color: #00BFFF;
-            color: white;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
-            font-weight: bold;
-            border-radius: 15px;
-            text-decoration: none;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-            transition: transform 0.2s ease;
-        }
-
-        .option:hover {
-            transform: scale(1.05);
-            background-color: #009ACD;
+        .form-group {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -259,76 +228,27 @@
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
         </form>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
-        <h1>Today</h1>
+        <h1>Today's Tasks</h1>
         <p>{{ today|date:"F j, Y" }}</p>
         <button onclick="toggleForm('new-task-form')" class="add-task-btn">+ Add New Task</button>
     </div>
 
-    <div id="new-task-form" style="display:none;" class="task-form-container">
-        <form method="post">
-            {% csrf_token %}
-            <p>
-                <label for="{{ form.title.id_for_label }}">Title:</label><br>
-                {{ form.title }}
-            </p>
-
-            <p>
-                <label for="{{ form.description.id_for_label }}">Description:</label><br>
-                {{ form.description }}
-            </p>
-
-            <p>
-                <label for="{{ form.deadline.id_for_label }}">Deadline:</label><br>
-                {{ form.deadline }}
-            </p>
-
-            <p>
-                <label for="{{ form.goal_date.id_for_label }}">Goal date:</label><br>
-                {{ form.goal_date }}
-            </p>
-
-            <p>
-                <label for="{{ form.estimated_time.id_for_label }}">Estimated Time of Completion in Minutes:</label><br>
-                {{ form.estimated_time }}<br>
-                <small></small>
-            </p>
-
-            <p>
-                <label for="{{ form.category.id_for_label }}">Category:</label><br>
-                {{ form.category }}
-            </p>
-
-            <p>
-                <label for="{{ form.category_color.id_for_label }}">Category color:</label><br>
-                {{ form.category_color }}
-            </p>
-
-            <button type="submit" class="save-btn">Save Task</button>
-            <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
-        </form>
-    </div>
-
     <form method="get">
         <div class="filter-box">
-            <input 
-                type="text" 
-                name="search" 
-                placeholder="Search tasks..." 
-                value="{{ search_query }}"
-            >
+            <input type="text" name="search" placeholder="Search tasks..." value="{{ search_query }}">
             <select name="category">
                 <option value="">Filter by category</option>
                 {% for cat in categories %}
-                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
-                        {{ cat }}
-                    </option>
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="save-btn">Apply</button>
@@ -338,118 +258,48 @@
         </div>
     </form>
 
-    <!-- Incomplete Tasks -->
-<div>
-    <h2 class="section-title">Today's Tasks</h2>
-    {% for task in incomplete_tasks %}
-        <div class="task-card" style="border-left-color: {{ task.category_color|default:'#555' }};">
+    <div id="new-task-form" class="task-form-container" style="display:none;">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.title.label_tag }}
+            {{ form.title }}
 
-            
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
-                {% csrf_token %}
-                <button type="submit" class="check-circle{% if task.completed %} completed{% endif %}" title="{% if task.completed %}Mark as incomplete{% else %}Mark as complete{% endif %}">
-                    {% if task.completed %}✔{% endif %}
-                </button>
-            </form>
+            {{ form.description.label_tag }}
+            {{ form.description }}
 
-            <!-- Task Content -->
-            <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-            <div class="task-details">
-                <div class="task-title">{{ task.title }}</div>
-                <div class="task-desc">{{ task.description }}</div>
-                <div class="date-info">
-                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                </div>
-                <div class="date-info">
-                    {% if task.estimated_time %}Estimated Time: {{ task.estimated_time }} minutes{% endif %}
-                </div>
-                <div class="date-info">
-                    {% if task.category %}Category: {{ task.category }}{% endif %}
+            {{ form.deadline.label_tag }}
+            {{ form.deadline }}
+
+            {{ form.goal_date.label_tag }}
+            {{ form.goal_date }}
+
+            {{ form.category.label_tag }}
+            {{ form.category }}
+
+            <div class="form-group">
+                {{ form.category_color.label_tag }}
+                {{ form.category_color }}
+            </div>
+
+            <div class="form-group">
+                <div class="time-input-group">
+                    <label style="margin-right: 10px;">Estimated Duration:</label>
+                    <input type="number" name="estimated_hours" min="0" placeholder="Hours">
+                    <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
+                    <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="delete-btn">Delete</button>
-                </form>
-            </div>
-
-            <!-- Edit Form -->
-            <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
-                <form method="post" action="{% url 'edit_task' task.id %}">
-                    {% csrf_token %}
-                    {{ edit_forms|dict_get:task.id|safe }}
-                    <button type="submit" class="save-btn">Save Changes</button>
-                </form>
-            </div>
-        </div>
-    {% empty %}
-        <p>No tasks for today.</p>
-    {% endfor %}
-</div>
-
-<!-- Completed Tasks -->
-<div>
-    <h2 class="section-title">Completed Tasks</h2>
-    {% for task in completed_tasks %}
-        <div class="task-card completed" style="border-left-color: {{ task.category_color|default:'#555' }};">
-
-            
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
-                {% csrf_token %}
-                <button type="submit" class="check-circle completed" title="Mark as incomplete">
-                    <span>✔</span>
-                </button>
-            </form>
-
-            <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-            <div class="task-details">
-                <div class="task-title">{{ task.title }}</div>
-                <div class="task-desc">{{ task.description }}</div>
-                <div class="date-info">
-                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                </div>
-                <div class="date-info">
-                    {% if task.estimated_time %}Estimated Time: {{ task.estimated_time }} minutes{% endif %}
-                </div>
-                <div class="date-info">
-                    {% if task.category %}Category: {{ task.category }}{% endif %}
-                </div>
-
-                <div class="action-buttons">
-                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn">Delete</button>
-                    </form>
-                </div>
-
-                <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
-                    <form method="post" action="{% url 'edit_task' task.id %}">
-                        {% csrf_token %}
-                        {{ edit_forms|dict_get:task.id|safe }}
-                        <button type="submit" class="save-btn">Save Changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    {% empty %}
-        <p>No tasks completed today.</p>
-    {% endfor %}
-</div>
-
+            <button type="submit" class="save-btn">Save Task</button>
+            <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
+        </form>
+    </div>
 
 <script>
     function toggleForm(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.display = el.style.display === "none" ? "block" : "none";
-        }
+        const form = document.getElementById(id);
+        if (!form) return;
+        form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
     }
 </script>
 </body>
