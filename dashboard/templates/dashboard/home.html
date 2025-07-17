@@ -4,6 +4,13 @@
     <title>Dashboard - Daily Productivity</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        .title{
+            text-align: center;
+            margin-top: 20px;
+            color: white
+
+        }
+
         body {
             background-color: #2e376e;
             color: white;
@@ -42,15 +49,7 @@
         .delete-btn {
             background-color: #ff4d4d;
         }
-
-        form {
-            background-color: #ffffff;
-            color: #000;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
+      
         .task-card {
             background-color: white;
             color: #000;
@@ -195,7 +194,7 @@
         </form>
     </div>
 </div>
-    <h1>Daily Productivity Summary for {{ summary.date }}</h1>
+    <h1 class="title">Daily Productivity Summary for {{ summary.date }}</h1>
 
     {% if summary %}
     <ul>
@@ -243,8 +242,7 @@
     };
 
     new Chart(ctx, config);
-    </script>
-
+    </script>>
     {% else %}
     <p>No summary data for today.</p>
     {% endif %}
