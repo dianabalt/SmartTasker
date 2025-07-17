@@ -44,5 +44,4 @@ def home(request):
         "task_names": task_names,
         "estimated_minutes": estimated_minutes,
     }
-
-    return render(request, "dashboard/home.html", context)
+    return render(request, "dashboard/dashboard.html", context)
