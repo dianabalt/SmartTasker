@@ -203,7 +203,7 @@
             font-weight: bold;
             font-size: 14px;
         }
-                .navbar {
+        .navbar {
             background-color: #1c2448;
             padding: 12px 30px;
             display: flex;
@@ -247,8 +247,10 @@
         .option:hover {
             transform: scale(1.05);
             background-color: #009ACD;
+        }
     </style>
 </head>
+<body>
 <div class="navbar">
     <div><a href="{% url 'home' %}">SmartTasker</a></div>
     <div>
@@ -272,7 +274,42 @@
     <div id="new-task-form" style="display:none;" class="task-form-container">
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            <p>
+                <label for="{{ form.title.id_for_label }}">Title:</label><br>
+                {{ form.title }}
+            </p>
+
+            <p>
+                <label for="{{ form.description.id_for_label }}">Description:</label><br>
+                {{ form.description }}
+            </p>
+
+            <p>
+                <label for="{{ form.deadline.id_for_label }}">Deadline:</label><br>
+                {{ form.deadline }}
+            </p>
+
+            <p>
+                <label for="{{ form.goal_date.id_for_label }}">Goal date:</label><br>
+                {{ form.goal_date }}
+            </p>
+
+            <p>
+                <label for="{{ form.estimated_time.id_for_label }}">Estimated Time of Completion in Minutes:</label><br>
+                {{ form.estimated_time }}<br>
+                <small></small>
+            </p>
+
+            <p>
+                <label for="{{ form.category.id_for_label }}">Category:</label><br>
+                {{ form.category }}
+            </p>
+
+            <p>
+                <label for="{{ form.category_color.id_for_label }}">Category color:</label><br>
+                {{ form.category_color }}
+            </p>
+
             <button type="submit" class="save-btn">Save Task</button>
             <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
         </form>
@@ -302,98 +339,110 @@
     </form>
 
     <!-- Incomplete Tasks -->
-    <div>
-        <h2 class="section-title">Today's Tasks</h2>
-        {% for task in incomplete_tasks %}
-            <div class="task-card">
-                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-                <div class="task-details">
-                    <div class="task-title">{{ task.title }}</div>
-                    <div class="task-desc">{{ task.description }}</div>
-                    <div class="date-info">
-                        {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                        {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                    </div>
-                    <div class="date-info">
-                        {% if task.category %}Category: {{ task.category }}{% endif %}
-                    </div>
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                        <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="delete-btn">Delete</button>
-                        </form>
-                    </div>
+<div>
+    <h2 class="section-title">Today's Tasks</h2>
+    {% for task in incomplete_tasks %}
+        <div class="task-card" style="border-left-color: {{ task.category_color|default:'#555' }};">
 
-                    <div id="edit-form-{{ task.id }}" class="edit-form">
-                        <form method="post" action="{% url 'edit_task' task.id %}">
-                            {% csrf_token %}
-                            {{ edit_forms|dict_get:task.id|safe }}
-                            <button type="submit" class="save-btn">Save Changes</button>
-                        </form>
-                    </div>
+            
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
+                {% csrf_token %}
+                <button type="submit" class="check-circle{% if task.completed %} completed{% endif %}" title="{% if task.completed %}Mark as incomplete{% else %}Mark as complete{% endif %}">
+                    {% if task.completed %}✔{% endif %}
+                </button>
+            </form>
+
+            <!-- Task Content -->
+            <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+            <div class="task-details">
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="date-info">
+                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
                 </div>
+                <div class="date-info">
+                    {% if task.estimated_time %}Estimated Time: {{ task.estimated_time }} minutes{% endif %}
+                </div>
+                <div class="date-info">
+                    {% if task.category %}Category: {{ task.category }}{% endif %}
+                </div>
+            </div>
 
-                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="check-circle{% if task.completed %} completed{% endif %}" title="{% if task.completed %}Mark as incomplete{% else %}Mark as complete{% endif %}">
-                        {% if task.completed %}
-                            <span>✔</span>
-                        {% endif %}
-                    </button>
-
+                    <button type="submit" class="delete-btn">Delete</button>
                 </form>
             </div>
-        {% empty %}
-            <p>No tasks for today.</p>
-        {% endfor %}
-    </div>
 
-    <!-- Completed Tasks -->
-    <div>
-        <h2 class="section-title">Completed Tasks</h2>
-        {% for task in completed_tasks %}
-            <div class="task-card completed">
-                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-                <div class="task-details">
-                    <div class="task-title">{{ task.title }}</div>
-                    <div class="task-desc">{{ task.description }}</div>
-                    <div class="date-info">
-                        {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                        {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                    </div>
-                    <div class="date-info">
-                        {% if task.category %}Category: {{ task.category }}{% endif %}
-                    </div>
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                        <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="delete-btn">Delete</button>
-                        </form>
-                    </div>
-
-                    <div id="edit-form-{{ task.id }}" class="edit-form">
-                        <form method="post" action="{% url 'edit_task' task.id %}">
-                            {% csrf_token %}
-                            {{ edit_forms|dict_get:task.id|safe }}
-                            <button type="submit" class="save-btn">Save Changes</button>
-                        </form>
-                    </div>
-                </div>
-
-                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+            <!-- Edit Form -->
+            <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
+                <form method="post" action="{% url 'edit_task' task.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="check-circle completed" title="Mark as incomplete">
-                        <span>✔</span>
-                    </button>
+                    {{ edit_forms|dict_get:task.id|safe }}
+                    <button type="submit" class="save-btn">Save Changes</button>
                 </form>
             </div>
-        {% empty %}
-            <p>No tasks completed today.</p>
-        {% endfor %}
-    </div>
+        </div>
+    {% empty %}
+        <p>No tasks for today.</p>
+    {% endfor %}
 </div>
+
+<!-- Completed Tasks -->
+<div>
+    <h2 class="section-title">Completed Tasks</h2>
+    {% for task in completed_tasks %}
+        <div class="task-card completed" style="border-left-color: {{ task.category_color|default:'#555' }};">
+
+            
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
+                {% csrf_token %}
+                <button type="submit" class="check-circle completed" title="Mark as incomplete">
+                    <span>✔</span>
+                </button>
+            </form>
+
+            <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+            <div class="task-details">
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="date-info">
+                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                </div>
+                <div class="date-info">
+                    {% if task.estimated_time %}Estimated Time: {{ task.estimated_time }} minutes{% endif %}
+                </div>
+                <div class="date-info">
+                    {% if task.category %}Category: {{ task.category }}{% endif %}
+                </div>
+
+                <div class="action-buttons">
+                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
+
+                <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
+                    <form method="post" action="{% url 'edit_task' task.id %}">
+                        {% csrf_token %}
+                        {{ edit_forms|dict_get:task.id|safe }}
+                        <button type="submit" class="save-btn">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No tasks completed today.</p>
+    {% endfor %}
+</div>
+
 
 <script>
     function toggleForm(id) {
