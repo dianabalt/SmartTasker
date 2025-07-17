@@ -3,8 +3,198 @@
 <head>
     <title>Dashboard - Daily Productivity</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #2e376e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
+            background-color: #00BFFF;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+        }
+
+        form {
+            background-color: #ffffff;
+            color: #000;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .task-card {
+            background-color: white;
+            color: #000;
+            border-radius: 20px;
+            border-style: groove;
+            border-color: #2b04d6;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-card.completed {
+            background-color: #f1f1f1;
+            color: #999;
+            opacity: 0.6;
+        }
+
+        .task-card.completed .task-title,
+        .task-card.completed .task-desc,
+        .task-card.completed .date-info {
+            text-decoration: line-through;
+        }
+
+        .task-details {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .task-desc {
+            font-size: 14px;
+        }
+
+        .date-info {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .day-header {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .check-circle.completed {
+            background-color: #32CD32;
+            border-color: darkgreen;
+        }
+
+        .check-circle span {
+            color: darkgreen;
+            font-size: 16px;
+        }
+
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .category-symbol {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .navbar {
+            background-color: #1c2448;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .option-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .option {
+            background-color: #00BFFF;
+            color: white;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 15px;
+            text-decoration: none;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .option:hover {
+            transform: scale(1.05);
+            background-color: #009ACD;
+        }
+    </style>
 </head>
 <body>
+    <div class="navbar">
+    <div><a href="{% url 'home' %}">SmartTasker</a></div>
+    <div>
+        <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
+        <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</div>
     <h1>Daily Productivity Summary for {{ summary.date }}</h1>
 
     {% if summary %}
