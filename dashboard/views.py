@@ -13,4 +13,4 @@ def home(request):
     context = {
         "summary": summary,
     }
-    return render(request, "dashboard/home.html", context)
+    return render(request, "dashboard/dashboard.html", context)
