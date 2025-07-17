@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - Daily Productivity</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Daily Productivity Summary for {{ summary.date }}</h1>
+
+    {% if summary %}
+    <ul>
+        <li>Total Time Spent: {{ summary.total_time_spent }}</li>
+        <li>Productive Time: {{ summary.productive_time }}</li>
+        <li>Unproductive Time: {{ summary.unproductive_time }}</li>
+        <li>Estimated Time: {{ summary.estimated_time }}</li>
+        <li>Actual Time: {{ summary.actual_time }}</li>
+    </ul>
+
+    <canvas id="chart" width="400" height="200"></canvas>
+
+    <script>
+    const ctx = document.getElementById('chart').getContext('2d');
+
+    // Use Django template filter to get total seconds or default to 0
+    const estimated = {{ summary.estimated_time.total_seconds|default:"0" }};
+    const actual = {{ summary.actual_time.total_seconds|default:"0" }};
+
+    const data = {
+        labels: ['Estimated Time', 'Actual Time'],
+        datasets: [{
+            label: 'Time (hours)',
+            data: [estimated / 3600, actual / 3600], // convert seconds to hours
+            backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+            borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+            borderWidth: 1
+        }]
+    };
+
+    const config = {
+        type: 'bar',
+        data: data,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Hours'
+                    }
+                }
+            }
+        }
+    };
+
+    new Chart(ctx, config);
+    </script>
+
+    {% else %}
+    <p>No summary data for today.</p>
+    {% endif %}
+</body>
+</html>
