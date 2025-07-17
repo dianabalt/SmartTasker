@@ -1,0 +1,277 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>This Week's Tasks</title>
+    <style>
+        body {
+            background-color: #2e376e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
+            background-color: #00BFFF;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+        }
+
+        form {
+            background-color: #ffffff;
+            color: #000;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .task-card {
+            background-color: white;
+            color: #000;
+            border-radius: 20px;
+            border-style: groove;
+            border-color: #2b04d6;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-card.completed {
+            background-color: #f1f1f1;
+            color: #999;
+            opacity: 0.6;
+        }
+
+        .task-card.completed .task-title,
+        .task-card.completed .task-desc,
+        .task-card.completed .date-info {
+            text-decoration: line-through;
+        }
+
+        .task-details {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .task-desc {
+            font-size: 14px;
+        }
+
+        .date-info {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .day-header {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .check-circle.completed {
+            background-color: #32CD32;
+            border-color: darkgreen;
+        }
+
+        .check-circle span {
+            color: darkgreen;
+            font-size: 16px;
+        }
+
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .category-symbol {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>This Week's Tasks</h1>
+            <p>{{ start_date|date:"F j" }} – {{ end_date|date:"F j, Y" }}</p>
+            <button onclick="toggleForm('new-task-form')" class="add-task-btn">+ Add New Task</button>
+        </div>
+
+        <div id="new-task-form" style="display:none;">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="save-btn">Save Task</button>
+                <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
+            </form>
+        </div>
+
+        <!-- Search and Category Filter -->
+        <form method="get" style="margin-bottom: 20px;">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search tasks..." 
+                value="{{ search_query }}" 
+                style="padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 60%; margin-right: 10px;"
+            >
+            <select 
+                name="category" 
+                style="padding: 8px; border-radius: 8px; border: 1px solid #ccc;"
+            >
+                <option value="">Filter by category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="save-btn" style="margin-left: 10px;">Apply</button>
+            {% if search_query or current_category %}
+                <a href="{% url 'weekly_tasks' %}" class="delete-btn" style="text-decoration: none; padding: 9px 14px;">Reset</a>
+            {% endif %}
+        </form>
+
+        {% for day, tasks in tasks_by_day.items %}
+            <div class="day-header">{{ day }}</div>
+            {% for task in tasks %}
+                <div class="task-card {% if task.is_completed %}completed{% endif %}">
+                    <div class="task-details">
+                        <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+                        <div class="task-title">{{ task.title }}</div>
+                        <div class="task-desc">{{ task.description }}</div>
+                        <div class="date-info">
+                            {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                            {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                            {% if task.category %} | Category: {{ task.category }}{% endif %}
+                        </div>
+                        <div class="action-buttons" style="margin-top: 10px;">
+                            <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                            <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
+                        </div>
+
+                        <div id="edit-form-{{ task.id }}" class="edit-form">
+                            <form method="post" action="{% url 'edit_task' task.id %}">
+                                {% csrf_token %}
+                                {{ edit_forms|dict_get:task.id|safe }}
+                                <button type="submit" class="save-btn">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
+                            {% if task.is_completed %}<span>✔</span>{% endif %}
+                        </button>
+                    </form>
+                </div>
+            {% empty %}
+                <p>No tasks for {{ day }}.</p>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="day-header" style="margin-top:40px;">Completed This Week</div>
+        {% for task in all_tasks %}
+            {% if task.is_completed %}
+                <div class="task-card completed">
+                    <div class="task-details">
+                        <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+                        <div class="task-title">{{ task.title }}</div>
+                        <div class="task-desc">{{ task.description }}</div>
+                        <div class="date-info">
+                            {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                            {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                            {% if task.category %} | Category: {{ task.category }}{% endif %}
+                        </div>
+                        <div class="action-buttons" style="margin-top: 10px;">
+                            <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                            <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
+                        </div>
+
+                        <div id="edit-form-{{ task.id }}" class="edit-form">
+                            <form method="post" action="{% url 'edit_task' task.id %}">
+                                {% csrf_token %}
+                                {{ edit_forms|dict_get:task.id|safe }}
+                                <button type="submit" class="save-btn">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="check-circle completed" title="Undo complete">
+                            <span>✔</span>
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        {% empty %}
+            <p>No tasks completed this week.</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        function toggleForm(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = el.style.display === "none" ? "block" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
