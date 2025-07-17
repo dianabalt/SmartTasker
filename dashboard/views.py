@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from datetime import date
 from tasks.models import Task
+import json
 
 def home(request):
     today = date.today()
@@ -15,7 +16,7 @@ def home(request):
     total_tasks = Task.objects.count()
 
     # Completed tasks count
-    completed_tasks = Task.objects.filter(completed=True).count()
+    completed_tasks = Task.objects.filter(is_completed=True).count()
 
     # Total estimated time in minutes (sum of estimated_time in minutes)
     total_estimated_minutes = 0
@@ -41,7 +42,7 @@ def home(request):
         "total_tasks": total_tasks,
         "completed_tasks": completed_tasks,
         "total_estimated_minutes": total_estimated_minutes,
-        "task_names": task_names,
-        "estimated_minutes": estimated_minutes,
+        "task_names": json.dumps(task_names),
+        "estimated_minutes": json.dumps(estimated_minutes),
     }
     return render(request, "dashboard/dashboard.html", context)
