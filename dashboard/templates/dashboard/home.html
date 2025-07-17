@@ -1,188 +1,187 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard - Daily Productivity</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - SmartTasker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .title{
-            text-align: center;
-            margin-top: 20px;
-            color: white
+<style>
+  body {
+    background-color: #2e376e;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
 
-        }
+  /* Navbar */
+  .navbar {
+    background-color: #1c2448;
+    padding: 12px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .navbar a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: bold;
+  }
+  .navbar a:hover {
+    text-decoration: underline;
+  }
 
-        body {
-            background-color: #2e376e;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+  /* Buttons */
+  .add-task-btn, .delete-btn, .save-btn, .edit-btn {
+    background-color: #00BFFF;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+  .delete-btn {
+    background-color: #ff4d4d;
+  }
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 30px 20px;
-        }
+  /* Task cards */
+  .task-card {
+    background-color: white;
+    color: black;
+    border-radius: 20px;
+    border: groove #2b04d6;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    transition: opacity 0.3s ease;
+  }
+  .task-card.completed {
+    background-color: #f1f1f1;
+    color: #999;
+    opacity: 0.6;
+  }
+  .task-card.completed .task-title,
+  .task-card.completed .task-desc,
+  .task-card.completed .date-info {
+    text-decoration: line-through;
+  }
+  .task-details {
+    flex-grow: 1;
+  }
+  .task-title {
+    font-weight: bold;
+    font-size: 18px;
+  }
+  .task-desc {
+    font-size: 14px;
+  }
+  .date-info {
+    font-size: 13px;
+    color: #333;
+  }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+  /* Check circles */
+  .check-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .check-circle.completed {
+    background-color: #32CD32;
+    border-color: darkgreen;
+  }
+  .check-circle span {
+    color: darkgreen;
+    font-size: 16px;
+  }
 
-        h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
-        }
+  .edit-form {
+    display: none;
+    margin-top: 10px;
+  }
 
-        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
-            background-color: #00BFFF;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-right: 8px;
-        }
+  .category-symbol {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
 
-        .delete-btn {
-            background-color: #ff4d4d;
-        }
-      
-        .task-card {
-            background-color: white;
-            color: #000;
-            border-radius: 20px;
-            border-style: groove;
-            border-color: #2b04d6;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            transition: opacity 0.3s ease;
-        }
+  /* Option boxes */
+  .option-boxes {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .option {
+    background-color: #00BFFF;
+    color: white;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    font-weight: bold;
+    border-radius: 15px;
+    text-decoration: none;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+  }
+  .option:hover {
+    transform: scale(1.05);
+    background-color: #009ACD;
+  }
 
-        .task-card.completed {
-            background-color: #f1f1f1;
-            color: #999;
-            opacity: 0.6;
-        }
+  /* Dashboard sections: centered text, white semi-transparent boxes that wrap content */
+  .section {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .section > h2 {
+    color: black;
+    margin-bottom: 15px;
+  }
+  .section p.summary-item,
+  .section ul {
+    display: inline-block; /* shrink-wrap */
+    background-color: rgba(255, 255, 255, 0.85);
+    color: black;
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    text-align: left; /* list readability */
+  }
+  .section ul {
+    padding-left: 20px;
+    list-style-position: inside;
+    margin: 0;
+  }
+  .section li {
+    margin-bottom: 6px;
+  }
 
-        .task-card.completed .task-title,
-        .task-card.completed .task-desc,
-        .task-card.completed .date-info {
-            text-decoration: line-through;
-        }
+  /* Headings and paragraphs inside section */
+  .section h1, .section h2, .section h3, .section p {
+    color: black;
+  }
+</style>
 
-        .task-details {
-            flex-grow: 1;
-        }
-
-        .task-title {
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .task-desc {
-            font-size: 14px;
-        }
-
-        .date-info {
-            font-size: 13px;
-            color: #333;
-        }
-
-        .day-header {
-            margin-top: 30px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ccc;
-            font-size: 18px;
-            font-weight: bold;
-            color: #ccc;
-        }
-
-        .check-circle {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid #333;
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .check-circle.completed {
-            background-color: #32CD32;
-            border-color: darkgreen;
-        }
-
-        .check-circle span {
-            color: darkgreen;
-            font-size: 16px;
-        }
-
-        .edit-form {
-            display: none;
-            margin-top: 10px;
-        }
-
-        .category-symbol {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .navbar {
-            background-color: #1c2448;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: bold;
-        }
-
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-        .option-boxes {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .option {
-            background-color: #00BFFF;
-            color: white;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
-            font-weight: bold;
-            border-radius: 15px;
-            text-decoration: none;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-            transition: transform 0.2s ease;
-        }
-
-        .option:hover {
-            transform: scale(1.05);
-            background-color: #009ACD;
-        }
-    </style>
 </head>
 <body>
-    <div class="navbar">
+
+<div class="navbar">
     <div><a href="{% url 'home' %}">SmartTasker</a></div>
     <div>
         <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
@@ -194,57 +193,77 @@
         </form>
     </div>
 </div>
-    <h1 class="title">Daily Productivity Summary for {{ summary.date }}</h1>
 
-    {% if summary %}
-    <ul>
-        <li>Total Time Spent: {{ summary.total_time_spent }}</li>
-        <li>Productive Time: {{ summary.productive_time }}</li>
-        <li>Unproductive Time: {{ summary.unproductive_time }}</li>
-        <li>Estimated Time: {{ summary.estimated_time }}</li>
-        <li>Actual Time: {{ summary.actual_time }}</li>
-    </ul>
+<h1>Dashboard</h1>
 
-    <canvas id="chart" width="400" height="200"></canvas>
+<div class="section">
+    <h2>Today's Tasks</h2>
+    {% if todays_tasks %}
+        <ul>
+            {% for task in todays_tasks %}
+                <li>
+                    <strong>{{ task.title }}</strong> - {% if task.completed %}Completed{% else %}Pending{% endif %}
+                    <br />
+                    Deadline: {{ task.deadline|date:"M d, Y" }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tasks due today.</p>
+    {% endif %}
+</div>
 
-    <script>
-    const ctx = document.getElementById('chart').getContext('2d');
+<div class="section">
+    <h2>Upcoming Deadlines</h2>
+    {% if upcoming_tasks %}
+        <ul>
+            {% for task in upcoming_tasks %}
+                <li>
+                    <strong>{{ task.title }}</strong> - Deadline: {{ task.deadline|date:"M d, Y" }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No upcoming tasks.</p>
+    {% endif %}
+</div>
 
-    // Use Django template filter to get total seconds or default to 0
-    const estimated = {{ summary.estimated_time.total_seconds|default:"0" }};
-    const actual = {{ summary.actual_time.total_seconds|default:"0" }};
+<div class="section">
+    <h2>Time Analysis</h2>
+    <p class="summary-item"><strong>Total Tasks:</strong> {{ total_tasks }}</p>
+    <p class="summary-item"><strong>Completed Tasks:</strong> {{ completed_tasks }}</p>
+    <p class="summary-item"><strong>Total Estimated Time:</strong> {{ total_estimated_minutes|floatformat:2 }} minutes</p>
 
-    const data = {
-        labels: ['Estimated Time', 'Actual Time'],
-        datasets: [{
-            label: 'Time (hours)',
-            data: [estimated / 3600, actual / 3600], // convert seconds to hours
-            backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)'],
-            borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
-            borderWidth: 1
-        }]
-    };
+    <h3>Estimated Time Per Task (Minutes)</h3>
+    <canvas id="estimatedTimeChart" width="600" height="300"></canvas>
+</div>
 
-    const config = {
+<script>
+    const ctx = document.getElementById('estimatedTimeChart').getContext('2d');
+    const estimatedTimeChart = new Chart(ctx, {
         type: 'bar',
-        data: data,
+        data: {
+            labels: {{ task_names|safe }},
+            datasets: [{
+                label: 'Estimated Time (minutes)',
+                data: {{ estimated_minutes|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
         options: {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Hours'
+                    ticks: {
+                        stepSize: 5
                     }
                 }
             }
         }
-    };
+    });
+</script>
 
-    new Chart(ctx, config);
-    </script>>
-    {% else %}
-    <p>No summary data for today.</p>
-    {% endif %}
 </body>
 </html>
