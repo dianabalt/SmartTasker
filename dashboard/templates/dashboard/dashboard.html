@@ -243,10 +243,10 @@
     const estimatedTimeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: {{ task_names|safe }},
+            labels: JSON.parse('{{ task_names|escapejs }}'),
             datasets: [{
                 label: 'Estimated Time (minutes)',
-                data: {{ estimated_minutes|safe }},
+                data: JSON.parse('{{ estimated_minutes|escapejs }}'),
                 backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1
