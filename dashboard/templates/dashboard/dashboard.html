@@ -13,20 +13,6 @@
     margin: 0;
     padding: 0;
   }
-    <style>
-        .title {
-            text-align: center;
-            margin-top: 20px;
-            color: white;
-        }
-
-        body {
-            background-color: #2e376e;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
 
   /* Navbar */
   .navbar {
@@ -98,83 +84,6 @@
     font-size: 13px;
     color: #333;
   }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 30px 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 2em;
-            margin-bottom: 5px;
-        }
-
-        .add-task-btn,
-        .delete-btn,
-        .save-btn,
-        .edit-btn {
-            background-color: #00BFFF;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        .delete-btn {
-            background-color: #ff4d4d;
-        }
-
-        .task-card {
-            background-color: white;
-            color: #000;
-            border-radius: 20px;
-            border-style: groove;
-            border-color: #2b04d6;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            transition: opacity 0.3s ease;
-        }
-
-        .task-card.completed {
-            background-color: #f1f1f1;
-            color: #999;
-            opacity: 0.6;
-        }
-
-        .task-card.completed .task-title,
-        .task-card.completed .task-desc,
-        .task-card.completed .date-info {
-            text-decoration: line-through;
-        }
-
-        .task-details {
-            flex-grow: 1;
-        }
-
-        .task-title {
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .task-desc {
-            font-size: 14px;
-        }
-
-        .date-info {
-            font-size: 13px;
-            color: #333;
-        }
 
   /* Check circles */
   .check-circle {
@@ -269,58 +178,6 @@
   }
 </style>
 
-        .category-symbol {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .navbar {
-            background-color: #1c2448;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
-            font-weight: bold;
-        }
-
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-
-        .option-boxes {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .option {
-            background-color: #00BFFF;
-            color: white;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
-            font-weight: bold;
-            border-radius: 15px;
-            text-decoration: none;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s ease;
-        }
-
-        .option:hover {
-            transform: scale(1.05);
-            background-color: #009ACD;
-        }
-    </style>
 </head>
 <body>
 
@@ -380,33 +237,6 @@
     <h3>Estimated Time Per Task (Minutes)</h3>
     <canvas id="estimatedTimeChart" width="600" height="300"></canvas>
 </div>
-    <div class="navbar">
-        <div><a href="{% url 'home' %}">SmartTasker</a></div>
-        <div>
-            <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
-            <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
-            <a href="{% url 'dashboard' %}">Dashboard</a>
-            <form method="POST" action="{% url 'logout' %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
-                    Logout
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <h1 class="title">Daily Productivity Summary for {{ summary.date }}</h1>
-
-    {% if summary %}
-        <ul>
-            <li>Total Time Spent: {{ summary.total_time_spent }}</li>
-            <li>Productive Time: {{ summary.productive_time }}</li>
-            <li>Unproductive Time: {{ summary.unproductive_time }}</li>
-            <li>Estimated Time: {{ summary.estimated_time }}</li>
-            <li>Actual Time: {{ summary.actual_time }}</li>
-        </ul>
-
-        <canvas id="chart" width="400" height="200"></canvas>
 
 <script>
     const ctx = document.getElementById('estimatedTimeChart').getContext('2d');
@@ -434,43 +264,6 @@
         }
     });
 </script>
-        <script>
-            const ctx = document.getElementById('chart').getContext('2d');
 
-            const estimated = {{ summary.estimated_time.total_seconds|default:"0" }};
-            const actual = {{ summary.actual_time.total_seconds|default:"0" }};
-
-            const data = {
-                labels: ['Estimated Time', 'Actual Time'],
-                datasets: [{
-                    label: 'Time (hours)',
-                    data: [estimated / 3600, actual / 3600],
-                    backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)'],
-                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
-                    borderWidth: 1
-                }]
-            };
-
-            const config = {
-                type: 'bar',
-                data: data,
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Hours'
-                            }
-                        }
-                    }
-                }
-            };
-
-            new Chart(ctx, config);
-        </script>
-    {% else %}
-        <p>No summary data for today.</p>
-    {% endif %}
 </body>
 </html>
