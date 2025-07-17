@@ -140,6 +140,20 @@
     </style>
 </head>
 <body>
+
+   <div class="navbar">
+    <div><a href="{% url 'home' %}">SmartTasker</a></div>
+    <div>
+        <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
+        <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</div>
+
     <div class="container">
         <div class="header">
             <h1>This Week's Tasks</h1>

@@ -2,6 +2,7 @@ from django.shortcuts import render
 from .models import DailySummary
 from datetime import date
 
+
 def home(request):
     today = date.today()
     try:
