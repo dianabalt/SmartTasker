@@ -163,6 +163,12 @@
         .timer-display {
             margin-top: 5px;
             font-size: 13px;
+            background-color: #eef0f5;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 8px;
+            text-align: center;
+            display: inline-block;
         }
 
         .time-remain.expired {
@@ -171,7 +177,8 @@
 
         .overtime {
             color: red;
-            margin-left: 10px;
+            margin-top: 5px;
+            display: block;
         }
 
         .edit-form {
@@ -288,10 +295,12 @@
                 {{ form.goal_date }}
             </p>
 
-            <p>
-                <label for="{{ form.estimated_time.id_for_label }}">Estimated Time of Completion in Minutes:</label><br>
-                {{ form.estimated_time }}
-            </p>
+            <div class="time-input-group">
+                <label style="margin-right: 10px;">Estimated Duration:</label>
+                <input type="number" name="estimated_hours" min="0" placeholder="Hours">
+                <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
+                <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
+            </div>
 
             <p>
                 <label for="{{ form.category.id_for_label }}">Category:</label><br>
@@ -364,11 +373,12 @@
                     </form>
                 </div>
 
-                <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
+                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container" style="display: none;">
                     <form method="post" action="{% url 'edit_task' task.id %}">
                         {% csrf_token %}
                         {{ edit_forms|dict_get:task.id|safe }}
                         <button type="submit" class="save-btn">Save Changes</button>
+                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                     </form>
                 </div>
 
@@ -378,8 +388,9 @@
                     <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
                     <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
                     <div id="timer-display-{{ task.id }}" class="timer-display" style="margin-top: 5px;">
-                        Time Remaining: {{ task.estimated_time|default:"00" }}:00:00
+                        {{ task.estimated_time|seconds_to_hms }}
                     </div>
+                    <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
                 </div>
             </div>
         {% empty %}
@@ -422,11 +433,12 @@
                         </form>
                     </div>
 
-                    <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
+                    <div id="edit-form-{{ task.id }}" class="edit-form task-form-container" style="display: none;">
                         <form method="post" action="{% url 'edit_task' task.id %}">
                             {% csrf_token %}
                             {{ edit_forms|dict_get:task.id|safe }}
                             <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                         </form>
                     </div>
                 </div>
@@ -455,7 +467,7 @@
     }
 
     // Timer state and intervals for countdown timers
-    const timers = {};  // taskId: {remainingSeconds, intervalId}
+    const timers = {};  // taskId: {remainingSeconds, intervalId, notified}
 
     // Load timer states from localStorage
     function loadTimers() {
@@ -467,7 +479,10 @@
     function saveTimers() {
         const state = {};
         for (const taskId in timers) {
-            state[taskId] = { remainingSeconds: timers[taskId].remainingSeconds };
+            state[taskId] = {
+                remainingSeconds: timers[taskId].remainingSeconds,
+                notified: timers[taskId].notified
+            };
         }
         localStorage.setItem('countdownTimers', JSON.stringify(state));
     }
@@ -475,24 +490,33 @@
     // Update timer display for a task
     function updateDisplay(taskId) {
         const display = document.getElementById(`timer-display-${taskId}`);
+        const overtimeEl = document.getElementById(`overtime-display-${taskId}`);
         if (!display) return;
         const remaining = timers[taskId]?.remainingSeconds ?? 0;
-        if (remaining > 0) {
-            display.textContent = `Time Remaining: ${formatTime(remaining)}`;
+        if (remaining >= 0) {
+            display.textContent = formatTime(remaining);
             display.classList.remove('expired');
+            if (overtimeEl) overtimeEl.style.display = 'none';
         } else {
-            display.textContent = "Time's Up!";
-            display.classList.add('expired');
+            if (!timers[taskId].notified) {
+                alert(`Task ${taskId} time is up!`);
+                timers[taskId].notified = true;
+                display.classList.add('expired');
+                display.textContent = '00:00:00';
+                if (overtimeEl) overtimeEl.style.display = 'block';
+            }
+            if (overtimeEl) overtimeEl.textContent = 'Overtime: ' + formatTime(-remaining);
         }
     }
 
     // Start countdown timer
-    function startTimer(taskId, estMinutes) {
+    function startTimer(taskId, estSeconds) {
         if (timers[taskId]?.intervalId) return; // Already running
 
         if (!timers[taskId]) {
             timers[taskId] = {
-                remainingSeconds: estMinutes * 60
+                remainingSeconds: estSeconds,
+                notified: false
             };
         }
 
@@ -501,12 +525,6 @@
         timers[taskId].intervalId = setInterval(() => {
             timers[taskId].remainingSeconds--;
             updateDisplay(taskId);
-
-            if (timers[taskId].remainingSeconds <= 0) {
-                clearInterval(timers[taskId].intervalId);
-                timers[taskId].intervalId = null;
-                alert(`Task ${taskId} time is up!`);
-            }
             saveTimers();
         }, 1000);
 
@@ -523,13 +541,13 @@
     }
 
     // Stop countdown timer and reset
-function stopTimer(taskId, estMinutes) {
+function stopTimer(taskId, estSeconds) {
     if (timers[taskId]?.intervalId) {
         clearInterval(timers[taskId].intervalId);
     }
 
     // Calculate elapsed time before resetting
-    const originalSeconds = estMinutes * 60;
+    const originalSeconds = estSeconds;
     const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
     const elapsed = originalSeconds - remaining;
 
@@ -540,8 +558,11 @@ function stopTimer(taskId, estMinutes) {
     // Reset timer state
     timers[taskId] = {
         remainingSeconds: originalSeconds,
-        intervalId: null
+        intervalId: null,
+        notified: false
     };
+    const overEl = document.getElementById(`overtime-display-${taskId}`);
+    if (overEl) overEl.style.display = 'none';
 
     updateDisplay(taskId);
     saveTimers();
@@ -552,14 +573,18 @@ function stopTimer(taskId, estMinutes) {
     window.addEventListener('load', () => {
         const storedTimers = loadTimers();
         for (const taskId in storedTimers) {
-            timers[taskId] = { remainingSeconds: storedTimers[taskId].remainingSeconds, intervalId: null };
+            timers[taskId] = {
+                remainingSeconds: storedTimers[taskId].remainingSeconds,
+                intervalId: null,
+                notified: storedTimers[taskId].notified
+            };
             updateDisplay(taskId);
         }
     });
 
 // Get elapsed time in seconds for a task
-    function getElapsedTime(taskId, estMinutes) {
-        const originalSeconds = estMinutes * 60;
+    function getElapsedTime(taskId, estSeconds) {
+        const originalSeconds = estSeconds;
         const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
         const elapsed = originalSeconds - remaining;
     return elapsed; // in seconds

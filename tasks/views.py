@@ -114,7 +114,8 @@ def daily_tasks(request):
 @login_required
 def weekly_tasks(request):
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    week_offset = int(request.GET.get('week', 0))
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)  # Monday
     end_of_week = start_of_week + timedelta(days=6)          # Sunday
 
     search_query = request.GET.get('search', '').strip()
@@ -159,6 +160,7 @@ def weekly_tasks(request):
 
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     tasks_by_day = {day: [] for day in weekdays}
+    week_day_dates = {day: start_of_week + timedelta(days=i) for i, day in enumerate(weekdays)}
     completed_tasks = []
     for task in all_tasks:
         if task.is_completed:
@@ -189,6 +191,7 @@ def weekly_tasks(request):
         'start_date': start_of_week,
         'end_date': end_of_week,
         'tasks_by_day': tasks_by_day,
+        'week_day_dates': week_day_dates,
         'all_tasks': all_tasks,
         'completed_tasks': completed_tasks,
         'form': form,
@@ -199,6 +202,7 @@ def weekly_tasks(request):
         'spent_times': spent_times,
         'current_category': category_filter,
         'search_query': search_query,
+        'week_offset': week_offset,
     })
 
 

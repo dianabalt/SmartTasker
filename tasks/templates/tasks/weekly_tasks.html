@@ -159,9 +159,23 @@
             font-size: 16px;
         }
 
+        .timer-section {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .timer-label {
+            font-weight: bold;
+        }
+
         .timer-display {
             margin-top: 5px;
             font-size: 13px;
+            background-color: #eef0f5;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
         }
 
         .time-remain.expired {
@@ -170,7 +184,8 @@
 
         .overtime {
             color: red;
-            margin-left: 10px;
+            margin-top: 5px;
+            display: block;
         }
 
         .edit-form {
@@ -311,11 +326,18 @@
     </div>
 
     {% for day, tasks in tasks_by_day.items %}
-        <div class="day-header">{{ day }}</div>
+        <div class="day-header">{{ day }} - {{ week_day_dates|dict_get:day|date:"F j, Y" }}</div>
         {% for task in tasks %}
             <div class="task-card {% if task.is_completed %}completed{% endif %}">
+                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
+                        {% if task.is_completed %}<span>✔</span>{% endif %}
+                    </button>
+                </form>
+
+                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                 <div class="task-details">
-                    <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                     <div class="task-title">{{ task.title }}</div>
                     <div class="task-desc">{{ task.description }}</div>
                     <div class="date-info">
@@ -326,7 +348,7 @@
                         {% with info=running_timers|dict_get:task.id %}
                             {% if info %}
                                 <div class="timer-display">
-                                    Time Remaining: <span id="timer-{{ task.id }}" class="time-remain"></span>
+                                    <span id="timer-{{ task.id }}" class="time-remain"></span>
                                     <span id="overtime-{{ task.id }}" class="overtime" style="display:none;"></span>
                                 </div>
                             {% endif %}
@@ -349,13 +371,18 @@
                             <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                         </form>
                     </div>
+
+                    <div class="timer-section">
+                        <div class="timer-label">Time Remaining</div>
+                        <div id="timer-display-{{ task.id }}" class="timer-display">{{ task.estimated_time|seconds_to_hms }}</div>
+                        <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
+                        <div class="action-buttons" style="margin-top: 10px;">
+                            <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
+                            <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
+                            <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
+                        </div>
+                    </div>
                 </div>
-                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
-                        {% if task.is_completed %}<span>✔</span>{% endif %}
-                    </button>
-                </form>
             </div>
         {% endfor %}
     {% endfor %}
@@ -363,8 +390,14 @@
     <h2 class="section-title">Completed Tasks</h2>
     {% for task in completed_tasks %}
         <div class="task-card completed">
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                {% csrf_token %}
+                <button type="submit" class="check-circle completed" title="Mark as incomplete">
+                    <span>✔</span>
+                </button>
+            </form>
+            <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
             <div class="task-details">
-                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                 <div class="task-title">{{ task.title }}</div>
                 <div class="task-desc">{{ task.description }}</div>
                 <div class="date-info">
@@ -390,16 +423,14 @@
                     </form>
                 </div>
             </div>
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                {% csrf_token %}
-                <button type="submit" class="check-circle completed" title="Mark as incomplete">
-                    <span>✔</span>
-                </button>
-            </form>
         </div>
     {% empty %}
         <p>No tasks completed this week.</p>
     {% endfor %}
+</div>
+
+<div style="text-align:center; margin-top: 20px;">
+    <a href="?week={{ week_offset|add:1 }}" class="add-task-btn">Next Week</a>
 </div>
 
 </div>
@@ -452,6 +483,86 @@
         for (const [id, data] of Object.entries(runningTimers)) {
             const el = document.getElementById('timer-' + id);
             if (el) startCountdown(el, { ...data, id: id });
+        }
+    });
+
+    // Local countdown timers for Start/Pause/Stop buttons
+    const timers = {};
+
+    function loadTimers() {
+        const stored = localStorage.getItem('weeklyCountdowns');
+        return stored ? JSON.parse(stored) : {};
+    }
+
+    function saveTimers() {
+        const state = {};
+        for (const id in timers) {
+            state[id] = { remainingSeconds: timers[id].remainingSeconds, notified: timers[id].notified };
+        }
+        localStorage.setItem('weeklyCountdowns', JSON.stringify(state));
+    }
+
+    function updateDisplay(id) {
+        const remEl = document.getElementById('timer-display-' + id) || document.getElementById('timer-' + id);
+        const overEl = document.getElementById('overtime-display-' + id) || document.getElementById('overtime-' + id);
+        if (!remEl) return;
+        const remaining = timers[id]?.remainingSeconds ?? 0;
+        if (remaining >= 0) {
+            remEl.textContent = formatTime(remaining);
+            remEl.classList.remove('expired');
+            if (overEl) overEl.style.display = 'none';
+        } else {
+            if (!timers[id].notified) {
+                alert('Task ' + id + ' time is up!');
+                timers[id].notified = true;
+                remEl.classList.add('expired');
+                remEl.textContent = '00:00:00';
+                if (overEl) overEl.style.display = 'block';
+            }
+            if (overEl) overEl.textContent = 'Overtime: ' + formatTime(-remaining);
+        }
+    }
+
+    function startTimer(id, est) {
+        if (timers[id]?.intervalId) return;
+
+        if (!timers[id]) {
+            timers[id] = { remainingSeconds: est, intervalId: null, notified: false };
+        }
+
+        updateDisplay(id);
+        timers[id].intervalId = setInterval(() => {
+            timers[id].remainingSeconds--;
+            updateDisplay(id);
+            saveTimers();
+        }, 1000);
+        saveTimers();
+    }
+
+    function pauseTimer(id) {
+        if (timers[id]?.intervalId) {
+            clearInterval(timers[id].intervalId);
+            timers[id].intervalId = null;
+            saveTimers();
+        }
+    }
+
+    function stopTimer(id, est) {
+        if (timers[id]?.intervalId) {
+            clearInterval(timers[id].intervalId);
+        }
+        timers[id] = { remainingSeconds: est, intervalId: null, notified: false };
+        const overEl = document.getElementById('overtime-display-' + id) || document.getElementById('overtime-' + id);
+        if (overEl) overEl.style.display = 'none';
+        updateDisplay(id);
+        saveTimers();
+    }
+
+    window.addEventListener('load', () => {
+        const stored = loadTimers();
+        for (const id in stored) {
+            timers[id] = { remainingSeconds: stored[id].remainingSeconds, intervalId: null, notified: stored[id].notified };
+            updateDisplay(id);
         }
     });
 </script>
