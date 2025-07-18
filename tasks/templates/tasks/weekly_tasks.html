@@ -305,6 +305,10 @@
                 <label style="margin-left:10px;">{{ form.start_timer }} Start timer now</label>
             </div>
 
+            <div class="form-group">
+                <label>{{ form.start_timer }} Start timer now</label>
+            </div>
+
             <button type="submit" class="save-btn">Save Task</button>
             <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
         </form>
@@ -373,7 +377,6 @@
     }
 
     const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
-
     function formatTime(sec) {
         const h = String(Math.floor(sec / 3600)).padStart(2, '0');
         const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
@@ -386,7 +389,6 @@
         const start = new Date(data.start_time);
         const est = data.estimated || 0;
         const initial = data.elapsed || 0;
-
         function update() {
             const now = new Date();
             const elapsed = initial + Math.floor((now - start) / 1000);
