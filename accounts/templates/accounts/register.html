@@ -4,18 +4,81 @@
     <meta charset="UTF-8">
     <title>Register</title>
     <style>
-        body { font-family: sans-serif; padding: 2em; background: #cccccc; }
-        form { background: white; padding: 20px; max-width: 400px; margin: auto; border-radius: 16px; }
-        h2 { text-align: center; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #2e376e;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+            margin-top: 25vh;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            margin: auto;
+            border-radius: 16px;
+        }
+
+        label {
+            color: black;
+        }
+
+        p {
+            text-align: center;
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            margin: 15px auto 0 auto;
+            color: black;
+            box-sizing: border-box;
+        }
+
+        a:link, a:visited {
+            background-color: white;
+            color: blue;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 16px;
+        }
+
+        a:hover, a:active {
+            background-color: white;
+            border-radius: 16px;
+        }
+
+        p a {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h2>Create an Account</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    <p style="text-align: center;">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    <div>
+        <h2>Create an Account</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </div>
 </body>
 </html>
