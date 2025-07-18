@@ -4,24 +4,37 @@
     <meta charset="UTF-8">
     <title>Login</title>
     <style>
-        
-        body {
-            background-color: #2e376e;
-            color: white;
-            font-family: Arial, sans-serif;
+        html, body {
+            height: 100%;
             margin: 0;
             padding: 0;
         }
 
+        body {
+            background-color: #2e376e;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 25vh;
+        }
+
         form {
-             background: white;
-             padding: 20px;
-             max-width: 400px;
-             margin: auto;
-             border-radius: 16px;
-            
-            }
-            
+            background: white;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            border-radius: 16px;
+            color: black;
+        }
+
         label {
             color: black;
         }
@@ -29,18 +42,52 @@
         h2 {
             text-align: center;
             color: white;
-
+            margin-bottom: 20px;
         }
 
+        a:link, a:visited {
+            background-color: white;
+            color: blue;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 16px;
+        }
+
+        a:hover, a:active {
+            background-color: white;
+            border-radius: 16px;
+        }
+
+        .register-box {
+            text-align: center;
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            margin-top: 15px;
+            color: black;
+            box-sizing: border-box;
+        }
+
+        .register-box a {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h2>Login</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
-    <p style="text-align: center;">Don’t have an account? <a href="{% url 'register' %}">Register</a></p>
+    <div class="container">
+        <h2>Login</h2>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Login</button>
+        </form>
+        <p class="register-box">
+            Don't have an account? <a href="{% url 'register' %}">Register</a>
+        </p>
+    </div>
 </body>
 </html>
