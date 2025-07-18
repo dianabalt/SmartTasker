@@ -429,6 +429,7 @@
                             <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
                         </div>
                     </div>
+                    <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
                 </div>
             </div>
         {% empty %}
