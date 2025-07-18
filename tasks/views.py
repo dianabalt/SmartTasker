@@ -46,9 +46,8 @@ def daily_tasks(request):
 
             task.save()
 
-            if form.cleaned_data.get('start_timer'):
-                if total_seconds > 0:
-                    Timer.objects.create(
+            if total_seconds > 0:
+                Timer.objects.create(
                     user=request.user,
                     task=task,
                     start_time=timezone.now(),
