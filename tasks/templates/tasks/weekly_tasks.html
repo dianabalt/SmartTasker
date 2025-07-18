@@ -366,7 +366,36 @@
                     <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
                         <form method="post" action="{% url 'edit_task' task.id %}">
                             {% csrf_token %}
-                            {{ edit_forms|dict_get:task.id|safe }}
+                            <p>
+                                <label>Title:</label><br>
+                                <input type="text" name="title" value="{{ task.title }}">
+                            </p>
+                            <p>
+                                <label>Description:</label><br>
+                                <textarea name="description">{{ task.description }}</textarea>
+                            </p>
+                            <p>
+                                <label>Deadline:</label><br>
+                                <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
+                            </p>
+                            <p>
+                                <label>Goal date:</label><br>
+                                <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
+                            </p>
+                            <div class="time-input-group">
+                                <label style="margin-right: 10px;">Estimated Duration:</label>
+                                <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
+                                <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
+                                <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
+                            </div>
+                            <p>
+                                <label>Category:</label><br>
+                                <input type="text" name="category" value="{{ task.category }}">
+                            </p>
+                            <p>
+                                <label>Category color:</label><br>
+                                <input type="color" name="category_color" value="{{ task.category_color }}">
+                            </p>
                             <button type="submit" class="save-btn">Save Changes</button>
                             <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                         </form>
@@ -417,7 +446,36 @@
                 <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
                     <form method="post" action="{% url 'edit_task' task.id %}">
                         {% csrf_token %}
-                        {{ edit_forms|dict_get:task.id|safe }}
+                        <p>
+                            <label>Title:</label><br>
+                            <input type="text" name="title" value="{{ task.title }}">
+                        </p>
+                        <p>
+                            <label>Description:</label><br>
+                            <textarea name="description">{{ task.description }}</textarea>
+                        </p>
+                        <p>
+                            <label>Deadline:</label><br>
+                            <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
+                        </p>
+                        <p>
+                            <label>Goal date:</label><br>
+                            <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
+                        </p>
+                        <div class="time-input-group">
+                            <label style="margin-right: 10px;">Estimated Duration:</label>
+                            <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
+                            <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
+                            <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
+                        </div>
+                        <p>
+                            <label>Category:</label><br>
+                            <input type="text" name="category" value="{{ task.category }}">
+                        </p>
+                        <p>
+                            <label>Category color:</label><br>
+                            <input type="color" name="category_color" value="{{ task.category_color }}">
+                        </p>
                         <button type="submit" class="save-btn">Save Changes</button>
                         <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                     </form>
@@ -447,6 +505,7 @@
     }
 
     const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
+    const taskTitles = JSON.parse('{{ task_titles_json|escapejs }}');
     function formatTime(sec) {
         const h = String(Math.floor(sec / 3600)).padStart(2, '0');
         const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
@@ -465,7 +524,8 @@
             const remaining = est - elapsed;
             if (remaining <= 0) {
                 if (!remEl.dataset.notified) {
-                    alert('Your time is up! Click Ok to continue working');
+                    const name = data.title || ('Task ' + data.id);
+                    alert(`Time's up for ${name}! Click OK to continue working and enter overtime.`);
                     remEl.dataset.notified = 'true';
                     remEl.classList.add('expired');
                     remEl.textContent = '00:00:00';
@@ -514,7 +574,8 @@
             if (overEl) overEl.style.display = 'none';
         } else {
             if (!timers[id].notified) {
-                alert('Task ' + id + ' time is up!');
+                const name = taskTitles[id] || ('Task ' + id);
+                alert(`Time's up for ${name}! Click OK to continue working and enter overtime.`);
                 timers[id].notified = true;
                 remEl.classList.add('expired');
                 remEl.textContent = '00:00:00';
