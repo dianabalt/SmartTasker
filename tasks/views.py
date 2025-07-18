@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Task
 from .forms import TaskForm
 from datetime import date, timedelta
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
@@ -40,9 +40,9 @@ def daily_tasks(request):
             hours = int(request.POST.get('estimated_hours', 0) or 0)
             minutes = int(request.POST.get('estimated_minutes', 0) or 0)
             seconds = int(request.POST.get('estimated_seconds', 0) or 0)
-            total_minutes = hours * 60 + minutes + seconds // 60
-            if total_minutes > 0:
-                task.estimated_time = total_minutes
+            total_seconds = hours * 3600 + minutes * 60 + seconds
+            if total_seconds > 0:
+                task.estimated_time = total_seconds
 
             task.save()
 
@@ -66,8 +66,19 @@ def daily_tasks(request):
             'elapsed': t.elapsed_time,
             'estimated': t.task.estimated_time or 0,
             'title': t.task.title,
+            'id': t.task_id,
         }
         for t in running_qs
+    }
+
+    spent_times = {
+        task.id: task.timers.aggregate(Sum('duration'))['duration__sum'] or 0
+        for task in all_tasks
+    }
+
+    spent_times = {
+        task.id: task.timers.aggregate(Sum('duration'))['duration__sum'] or 0
+        for task in all_tasks
     }
 
     return render(request, 'tasks/daily_tasks.html', {
@@ -79,6 +90,7 @@ def daily_tasks(request):
         'categories': categories,
         'running_timers': running,
         'running_timers_json': json.dumps(running),
+        'spent_times': spent_times,
         'current_category': category_filter,
         'search_query': search_query,
     })
@@ -114,9 +126,9 @@ def weekly_tasks(request):
             hours = int(request.POST.get('estimated_hours', 0) or 0)
             minutes = int(request.POST.get('estimated_minutes', 0) or 0)
             seconds = int(request.POST.get('estimated_seconds', 0) or 0)
-            total_minutes = hours * 60 + minutes + seconds // 60
-            if total_minutes > 0:
-                task.estimated_time = total_minutes
+            total_seconds = hours * 3600 + minutes * 60 + seconds
+            if total_seconds > 0:
+                task.estimated_time = total_seconds
 
             task.save()
 
@@ -148,6 +160,7 @@ def weekly_tasks(request):
             'elapsed': t.elapsed_time,
             'estimated': t.task.estimated_time or 0,
             'title': t.task.title,
+            'id': t.task_id,
         }
         for t in running_qs
     }
@@ -162,6 +175,7 @@ def weekly_tasks(request):
         'categories': categories,
         'running_timers': running,
         'running_timers_json': json.dumps(running),
+        'spent_times': spent_times,
         'current_category': category_filter,
         'search_query': search_query,
     })
@@ -171,6 +185,18 @@ def weekly_tasks(request):
 @login_required
 def toggle_task_complete(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
+    now = timezone.now()
+
+    timers = Timer.objects.filter(user=request.user, task=task)
+    for t in timers:
+        if t.is_running and t.start_time:
+            t.elapsed_time += int((now - t.start_time).total_seconds())
+            t.is_running = False
+            t.start_time = None
+        if t.elapsed_time:
+            t.duration += t.elapsed_time
+            t.elapsed_time = 0
+        t.save()
     task.is_completed = not task.is_completed
     task.save()
     return redirect(request.META.get('HTTP_REFERER', 'daily_tasks'))

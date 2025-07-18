@@ -6,9 +6,9 @@ from tasks.models import Task
 class Timer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='timers')
-    duration = models.IntegerField(help_text="Duration in minutes", default=0)  # total duration (optional)
+    duration = models.IntegerField(help_text="Duration in seconds", default=0)  # total duration (optional)
     start_time = models.DateTimeField(null=True, blank=True)
-    elapsed_time = models.IntegerField(default=0, help_text="Elapsed time in minutes")
+    elapsed_time = models.IntegerField(default=0, help_text="Elapsed time in seconds")
     is_running = models.BooleanField(default=False)
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,7 +22,7 @@ class Timer(models.Model):
     def pause(self):
         if self.is_running and self.start_time:
             now = timezone.now()
-            self.elapsed_time += int((now - self.start_time).total_seconds() // 60)  # minutes
+            self.elapsed_time += int((now - self.start_time).total_seconds())
             self.start_time = None
             self.is_running = False
             self.save()
@@ -30,7 +30,7 @@ class Timer(models.Model):
     def get_elapsed_time(self):
         if self.is_running and self.start_time:
             now = timezone.now()
-            return self.elapsed_time + int((now - self.start_time).total_seconds() // 60)
+            return self.elapsed_time + int((now - self.start_time).total_seconds())
         return self.elapsed_time
 
     def stop(self):
