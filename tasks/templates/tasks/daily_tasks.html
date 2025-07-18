@@ -272,6 +272,7 @@
         </div>
     </form>
 
+
 <h2 class="section-title">Today's Tasks</h2>
     {% for task in incomplete_tasks %}
         <div class="task-card {% if task.is_completed %}completed{% endif %}">
@@ -300,11 +301,12 @@
                         <button type="submit" class="delete-btn">Delete</button>
                     </form>
                 </div>
-                <div id="edit-form-{{ task.id }}" class="edit-form">
+                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
                     <form method="post" action="{% url 'edit_task' task.id %}">
                         {% csrf_token %}
                         {{ edit_forms|dict_get:task.id|safe }}
                         <button type="submit" class="save-btn">Save Changes</button>
+                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                     </form>
                 </div>
             </div>
@@ -340,11 +342,12 @@
                         <button type="submit" class="delete-btn">Delete</button>
                     </form>
                 </div>
-                <div id="edit-form-{{ task.id }}" class="edit-form">
+                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
                     <form method="post" action="{% url 'edit_task' task.id %}">
                         {% csrf_token %}
                         {{ edit_forms|dict_get:task.id|safe }}
                         <button type="submit" class="save-btn">Save Changes</button>
+                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
                     </form>
                 </div>
             </div>
