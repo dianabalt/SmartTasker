@@ -5,6 +5,9 @@ from datetime import date, timedelta
 from django.db.models import Q
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+import json
+from timers.models import Timer
 
 
 @login_required
@@ -34,13 +37,38 @@ def daily_tasks(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+            hours = int(request.POST.get('estimated_hours', 0) or 0)
+            minutes = int(request.POST.get('estimated_minutes', 0) or 0)
+            seconds = int(request.POST.get('estimated_seconds', 0) or 0)
+            total_minutes = hours * 60 + minutes + seconds // 60
+            if total_minutes > 0:
+                task.estimated_time = total_minutes
+
             task.save()
+
+            if form.cleaned_data.get('start_timer'):
+                Timer.objects.create(
+                    user=request.user,
+                    task=task,
+                    start_time=timezone.now(),
+                    is_running=True,
+                )
             return redirect('daily_tasks')
     else:
         form = TaskForm()
 
     edit_forms = {task.id: TaskForm(instance=task) for task in all_tasks}
     categories = Task.objects.filter(user=request.user).exclude(category='').values_list('category', flat=True).distinct()
+    running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
+    running = {
+        t.task_id: {
+            'start_time': t.start_time.isoformat(),
+            'elapsed': t.elapsed_time,
+            'estimated': t.task.estimated_time or 0,
+            'title': t.task.title,
+        }
+        for t in running_qs
+    }
 
     return render(request, 'tasks/daily_tasks.html', {
         'today': today,
@@ -49,6 +77,8 @@ def daily_tasks(request):
         'form': form,
         'edit_forms': edit_forms,
         'categories': categories,
+        'running_timers': running,
+        'running_timers_json': json.dumps(running),
         'current_category': category_filter,
         'search_query': search_query,
     })
@@ -81,7 +111,22 @@ def weekly_tasks(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+            hours = int(request.POST.get('estimated_hours', 0) or 0)
+            minutes = int(request.POST.get('estimated_minutes', 0) or 0)
+            seconds = int(request.POST.get('estimated_seconds', 0) or 0)
+            total_minutes = hours * 60 + minutes + seconds // 60
+            if total_minutes > 0:
+                task.estimated_time = total_minutes
+
             task.save()
+
+            if form.cleaned_data.get('start_timer'):
+                Timer.objects.create(
+                    user=request.user,
+                    task=task,
+                    start_time=timezone.now(),
+                    is_running=True,
+                )
             return redirect('weekly_tasks')
     else:
         form = TaskForm()
@@ -96,6 +141,16 @@ def weekly_tasks(request):
 
     edit_forms = {task.id: TaskForm(instance=task) for task in all_tasks}
     categories = Task.objects.filter(user=request.user).exclude(category='').values_list('category', flat=True).distinct()
+    running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
+    running = {
+        t.task_id: {
+            'start_time': t.start_time.isoformat(),
+            'elapsed': t.elapsed_time,
+            'estimated': t.task.estimated_time or 0,
+            'title': t.task.title,
+        }
+        for t in running_qs
+    }
 
     return render(request, 'tasks/weekly_tasks.html', {
         'start_date': start_of_week,
@@ -105,6 +160,8 @@ def weekly_tasks(request):
         'form': form,
         'edit_forms': edit_forms,
         'categories': categories,
+        'running_timers': running,
+        'running_timers_json': json.dumps(running),
         'current_category': category_filter,
         'search_query': search_query,
     })

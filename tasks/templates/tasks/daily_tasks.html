@@ -240,6 +240,13 @@
         <h1>Today's Tasks</h1>
         <p>{{ today|date:"F j, Y" }}</p>
         <button onclick="toggleForm('new-task-form')" class="add-task-btn">+ Add New Task</button>
+        {% if running_timers %}
+            <div id="active-timers">
+                {% for tid, info in running_timers.items %}
+                    <div>{{ info.title }}: <span id="timer-{{ tid }}"></span></div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
     <form method="get">
@@ -290,6 +297,10 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>{{ form.start_timer }} Start timer now</label>
+            </div>
+
             <button type="submit" class="save-btn">Save Task</button>
             <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
         </form>
@@ -301,6 +312,37 @@
         if (!form) return;
         form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
     }
+
+    const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
+
+    function startCountdown(el, data) {
+        const start = new Date(data.start_time);
+        const est = (data.estimated || 0) * 60;
+        const initial = (data.elapsed || 0) * 60;
+
+        function update() {
+            const now = new Date();
+            const elapsed = initial + Math.floor((now - start) / 1000);
+            const remaining = est - elapsed;
+            if (remaining <= 0 && !el.dataset.notified) {
+                alert('Timer for ' + data.title + ' is up!');
+                el.dataset.notified = 'true';
+            }
+            const abs = Math.abs(remaining);
+            const minutes = Math.floor(abs / 60);
+            const seconds = abs % 60;
+            el.textContent = (remaining < 0 ? '-' : '') + minutes + 'm ' + seconds + 's';
+        }
+        update();
+        setInterval(update, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        for (const [id, data] of Object.entries(runningTimers)) {
+            const el = document.getElementById('timer-' + id);
+            if (el) startCountdown(el, data);
+        }
+    });
 </script>
 </body>
 </html>
