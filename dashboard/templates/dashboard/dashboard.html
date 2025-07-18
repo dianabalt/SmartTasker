@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,179 +6,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - SmartTasker</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  body {
-    background-color: #2e376e;
-    color: white;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-  }
-
-  /* Navbar */
-  .navbar {
-    background-color: #1c2448;
-    padding: 12px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .navbar a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
-    font-weight: bold;
-  }
-  .navbar a:hover {
-    text-decoration: underline;
-  }
-
-  /* Buttons */
-  .add-task-btn, .delete-btn, .save-btn, .edit-btn {
-    background-color: #00BFFF;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-right: 8px;
-  }
-  .delete-btn {
-    background-color: #ff4d4d;
-  }
-
-  /* Task cards */
-  .task-card {
-    background-color: white;
-    color: black;
-    border-radius: 20px;
-    border: groove #2b04d6;
-    padding: 20px;
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    transition: opacity 0.3s ease;
-  }
-  .task-card.completed {
-    background-color: #f1f1f1;
-    color: #999;
-    opacity: 0.6;
-  }
-  .task-card.completed .task-title,
-  .task-card.completed .task-desc,
-  .task-card.completed .date-info {
-    text-decoration: line-through;
-  }
-  .task-details {
-    flex-grow: 1;
-  }
-  .task-title {
-    font-weight: bold;
-    font-size: 18px;
-  }
-  .task-desc {
-    font-size: 14px;
-  }
-  .date-info {
-    font-size: 13px;
-    color: #333;
-  }
-
-  /* Check circles */
-  .check-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2px solid #333;
-    background-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .check-circle.completed {
-    background-color: #32CD32;
-    border-color: darkgreen;
-  }
-  .check-circle span {
-    color: darkgreen;
-    font-size: 16px;
-  }
-
-  .edit-form {
-    display: none;
-    margin-top: 10px;
-  }
-
-  .category-symbol {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  /* Option boxes */
-  .option-boxes {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    flex-wrap: wrap;
-  }
-  .option {
-    background-color: #00BFFF;
-    color: white;
-    width: 200px;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3em;
-    font-weight: bold;
-    border-radius: 15px;
-    text-decoration: none;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.3);
-    transition: transform 0.2s ease;
-  }
-  .option:hover {
-    transform: scale(1.05);
-    background-color: #009ACD;
-  }
-
-  /* Dashboard sections: centered text, white semi-transparent boxes that wrap content */
-  .section {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  .section > h2 {
-    color: black;
-    margin-bottom: 15px;
-  }
-  .section p.summary-item,
-  .section ul {
-    display: inline-block; /* shrink-wrap */
-    background-color: rgba(255, 255, 255, 0.85);
-    color: black;
-    padding: 12px 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    margin-bottom: 10px;
-    text-align: left; /* list readability */
-  }
-  .section ul {
-    padding-left: 20px;
-    list-style-position: inside;
-    margin: 0;
-  }
-  .section li {
-    margin-bottom: 6px;
-  }
-
-  /* Headings and paragraphs inside section */
-  .section h1, .section h2, .section h3, .section p {
-    color: black;
-  }
-</style>
-
+    <style>
+      body {
+        background-color: #2e376e;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .navbar {
+        background-color: #1c2448;
+        padding: 12px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        margin-left: 20px;
+        font-weight: bold;
+      }
+      .navbar a:hover {
+        text-decoration: underline;
+      }
+      .stats-container {
+        display: flex;
+        gap: 40px;
+        padding: 30px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .stat {
+        background: white;
+        color: black;
+        border-radius: 12px;
+        padding: 20px 30px;
+        min-width: 180px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        font-weight: bold;
+      }
+      .stat p {
+        font-size: 2rem;
+        margin: 10px 0 0;
+      }
+      .section {
+        background: rgba(255, 255, 255, 0.9);
+        margin: 30px auto;
+        max-width: 900px;
+        border-radius: 12px;
+        padding: 20px 30px;
+        color: black;
+      }
+      .section h2 {
+        margin-top: 0;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      #timeChart {
+        max-width: 100%;
+        height: 300px;
+      }
+      #liveElapsedTime {
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 1.1em;
+      }
+    </style>
 </head>
 <body>
 
@@ -189,23 +89,53 @@
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
         </form>
     </div>
 </div>
 
-<h1>Dashboard</h1>
+<h1 style="text-align:center; margin-top: 30px;">Dashboard</h1>
+
+<div class="stats-container">
+    <div class="stat">
+        Total Tasks
+        <p>{{ total_tasks }}</p>
+    </div>
+    <div class="stat">
+        Completed Tasks
+        <p>{{ completed_tasks }}</p>
+    </div>
+    <div class="stat">
+        Total Estimated Time
+        <p>{{ total_estimated_minutes|floatformat:2 }} minutes</p>
+    </div>
+    <div class="stat">
+        Time Spent Today
+        <p>{{ today_time_str }}</p>
+    </div>
+    <div class="stat">
+        Time Spent This Week
+        <p>{{ week_time_str }}</p>
+    </div>
+    <div class="stat">
+        Time Spent (Live)
+        <p id="liveElapsedTime">0.00 minutes</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Task Time Comparison</h2>
+    <canvas id="timeChart"></canvas>
+</div>
 
 <div class="section">
     <h2>Today's Tasks</h2>
     {% if todays_tasks %}
         <ul>
             {% for task in todays_tasks %}
-                <li>
-                    <strong>{{ task.title }}</strong> - {% if task.is_completed %}Completed{% else %}Pending{% endif %}
-                    <br />
-                    Deadline: {{ task.deadline|date:"M d, Y" }}
-                </li>
+                <li><strong>{{ task.title }}</strong> — Due: {{ task.deadline|date:"M d, Y" }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -214,13 +144,11 @@
 </div>
 
 <div class="section">
-    <h2>Upcoming Deadlines</h2>
+    <h2>Upcoming Tasks</h2>
     {% if upcoming_tasks %}
         <ul>
             {% for task in upcoming_tasks %}
-                <li>
-                    <strong>{{ task.title }}</strong> - Deadline: {{ task.deadline|date:"M d, Y" }}
-                </li>
+                <li><strong>{{ task.title }}</strong> — Due: {{ task.deadline|date:"M d, Y" }}</li>
             {% endfor %}
         </ul>
     {% else %}
@@ -228,41 +156,97 @@
     {% endif %}
 </div>
 
-<div class="section">
-    <h2>Time Analysis</h2>
-    <p class="summary-item"><strong>Total Tasks:</strong> {{ total_tasks }}</p>
-    <p class="summary-item"><strong>Completed Tasks:</strong> {{ completed_tasks }}</p>
-    <p class="summary-item"><strong>Total Estimated Time:</strong> {{ total_estimated_minutes|floatformat:2 }} minutes</p>
-
-    <h3>Estimated Time Per Task (Minutes)</h3>
-    <canvas id="estimatedTimeChart" width="600" height="300"></canvas>
-</div>
-
 <script>
-    const ctx = document.getElementById('estimatedTimeChart').getContext('2d');
-    const estimatedTimeChart = new Chart(ctx, {
+    // From Django context variables
+    const taskNames = JSON.parse('{{ task_names|escapejs }}');
+    const estimatedMinutes = JSON.parse('{{ estimated_minutes|escapejs }}');
+
+    // These are the task IDs corresponding to the tasks in the chart (pass this from Django context if possible)
+    // For demo, assume the order matches the daily tasks IDs (you'll need to pass this from your view)
+    // Example:
+    // const taskIds = [1, 2, 3, ...];
+    // You must pass task IDs list from your view for this to work
+    const taskIds = JSON.parse('{{ task_ids|escapejs }}');  // Add task_ids to your context in views.py
+
+    // Load stored timers from localStorage
+    let storedTimers = {};
+    function loadTimers() {
+        const stored = localStorage.getItem('countdownTimers');
+        storedTimers = stored ? JSON.parse(stored) : {};
+    }
+    loadTimers();
+
+    // Initialize actualMinutesLive from stored timers
+    let actualMinutesLive = taskIds.map((taskId, idx) => {
+        const estMin = estimatedMinutes[idx];
+        if (storedTimers[taskId]) {
+            const remainingSeconds = storedTimers[taskId].remainingSeconds || 0;
+            const elapsedSec = estMin * 60 - remainingSeconds;
+            return elapsedSec > 0 ? +(elapsedSec / 60).toFixed(2) : 0;
+        }
+        return 0;
+    });
+
+    const ctx = document.getElementById('timeChart').getContext('2d');
+    const timeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: JSON.parse('{{ task_names|escapejs }}'),
-            datasets: [{
-                label: 'Estimated Time (minutes)',
-                data: JSON.parse('{{ estimated_minutes|escapejs }}'),
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+            labels: taskNames,
+            datasets: [
+                {
+                    label: 'Estimated Time (minutes)',
+                    data: estimatedMinutes,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                },
+                {
+                    label: 'Actual Time (minutes)',
+                    data: actualMinutesLive,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                }
+            ]
         },
         options: {
+            responsive: true,
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 5
+                    title: {
+                        display: true,
+                        text: 'Minutes'
                     }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Estimated vs Actual Time Per Task'
                 }
             }
         }
     });
+
+    // Update chart data & live elapsed time display every second
+    function updateChart() {
+        loadTimers();
+        actualMinutesLive = taskIds.map((taskId, idx) => {
+            const estMin = estimatedMinutes[idx];
+            if (storedTimers[taskId]) {
+                const remainingSeconds = storedTimers[taskId].remainingSeconds || 0;
+                const elapsedSec = estMin * 60 - remainingSeconds;
+                return elapsedSec > 0 ? +(elapsedSec / 60).toFixed(2) : 0;
+            }
+            return 0;
+        });
+
+        timeChart.data.datasets[1].data = actualMinutesLive;
+        timeChart.update();
+
+        // Update live elapsed total time display
+        const totalLiveElapsed = actualMinutesLive.reduce((a,b) => a + b, 0);
+        document.getElementById('liveElapsedTime').textContent = totalLiveElapsed.toFixed(2) + " minutes";
+    }
+
+    setInterval(updateChart, 1000);
 </script>
 
 </body>
