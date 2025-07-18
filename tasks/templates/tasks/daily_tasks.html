@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <title>Daily Tasks</title>
     <style>
-        /* Your existing CSS styles here */
         body {
             background-color: #2e376e;
             color: white;
@@ -14,27 +13,24 @@
             margin: 0;
             padding: 0;
         }
+
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             padding: 30px 20px;
         }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
         }
+
         h1 {
             font-size: 2em;
             margin-bottom: 5px;
         }
-        .section-title {
-            font-size: 1.5em;
-            margin-top: 30px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #00BFFF;
-            padding-bottom: 5px;
-        }
-        .add-task-btn, .edit-btn, .save-btn {
+
+        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
             background-color: #00BFFF;
             color: white;
             border: none;
@@ -42,22 +38,22 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            margin-right: 8px;
         }
+
         .delete-btn {
             background-color: #ff4d4d;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
         }
+
         .task-form-container {
             background-color: white;
             padding: 30px;
             border-radius: 15px;
             color: black;
+            margin-bottom: 30px;
+            display: none;
         }
+
         .task-form-container input,
         .task-form-container textarea,
         .task-form-container select {
@@ -67,14 +63,28 @@
             border-radius: 10px;
             border: 1px solid #ccc;
         }
+
         .task-form-container input[type="color"] {
             width: 60px;
             padding: 0;
         }
+
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .time-input-group input {
+            width: 100px;
+        }
+
         .task-form-container button {
             margin-top: 10px;
             margin-right: 10px;
         }
+
         .task-card {
             background-color: white;
             color: #000;
@@ -84,76 +94,72 @@
             padding: 20px;
             margin-bottom: 15px;
             display: flex;
-            align-items: flex-start;
             justify-content: space-between;
             gap: 15px;
+            transition: opacity 0.3s ease;
         }
+
         .task-card.completed {
             background-color: #f1f1f1;
             color: #999;
             opacity: 0.6;
         }
+
         .task-card.completed .task-title,
         .task-card.completed .task-desc,
         .task-card.completed .date-info {
             text-decoration: line-through;
         }
-        .category-symbol {
-            font-size: 18px;
-            font-weight: bold;
-            margin-right: 10px;
-            white-space: nowrap;
-        }
+
         .task-details {
             flex-grow: 1;
         }
+
         .task-title {
             font-weight: bold;
             font-size: 18px;
-            margin-bottom: 4px;
         }
+
         .task-desc {
             font-size: 14px;
-            margin-bottom: 8px;
         }
+
         .date-info {
             font-size: 13px;
             color: #333;
         }
-        .action-buttons {
-            margin-top: 10px;
+
+        .day-header {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ccc;
         }
-        .edit-form {
-            display: none;
-            margin-top: 10px;
-        }
+
         .check-circle {
             width: 28px;
             height: 28px;
             border-radius: 50%;
-            border: 2px solid #444;
-            background-color: white;
+            border: 2px solid #333;
+            background-color: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
         }
-        .check-circle:hover {
-            border-color: #00BFFF;
-        }
+
         .check-circle.completed {
             background-color: #32CD32;
-            border-color: #228B22;
+            border-color: darkgreen;
         }
-        .check-circle.completed span {
-            color: white;
-            font-size: 16px;
-        }
+
         .check-circle span {
-            color: black;
+            color: darkgreen;
             font-size: 16px;
         }
+
         .timer-display {
             margin-top: 5px;
             font-size: 13px;
@@ -172,19 +178,12 @@
             display: none;
             margin-top: 10px;
         }
-        .filter-box input[type="text"],
-        .filter-box select {
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-        .filter-box button {
-            padding: 10px 18px;
-            border-radius: 10px;
+
+        .category-symbol {
             font-weight: bold;
-            font-size: 14px;
+            margin-bottom: 5px;
         }
+
         .navbar {
             background-color: #1c2448;
             padding: 12px 30px;
@@ -192,30 +191,39 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .navbar a {
             color: white;
             text-decoration: none;
             margin-left: 20px;
             font-weight: bold;
         }
+
         .navbar a:hover {
             text-decoration: underline;
         }
-        .option-boxes {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-        .option {
-            background-color: #00BFFF;
-            color: white;
-            width: 200px;
-            height: 200px;
+
+        .filter-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.3em;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .filter-box input[type="text"],
+        .filter-box select {
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .filter-box button {
+            padding: 10px 18px;
+            border-radius: 10px;
             font-weight: bold;
             border-radius: 15px;
             text-decoration: none;
@@ -225,6 +233,12 @@
         .option:hover {
             transform: scale(1.05);
             background-color: #009ACD;
+        }
+
+        /* Expired timer style */
+        .expired {
+            color: red !important;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -237,14 +251,16 @@
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
         </form>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
-        <h1>Today</h1>
+        <h1>Today's Tasks</h1>
         <p>{{ today|date:"F j, Y" }}</p>
         <button onclick="toggleForm('new-task-form')" class="add-task-btn">+ Add New Task</button>
     </div>
@@ -274,8 +290,7 @@
 
             <p>
                 <label for="{{ form.estimated_time.id_for_label }}">Estimated Time of Completion in Minutes:</label><br>
-                {{ form.estimated_time }}<br>
-                <small></small>
+                {{ form.estimated_time }}
             </p>
 
             <p>
@@ -295,18 +310,13 @@
 
     <form method="get">
         <div class="filter-box">
-            <input 
-                type="text" 
-                name="search" 
-                placeholder="Search tasks..." 
-                value="{{ search_query }}"
-            >
+            <input type="text" name="search" placeholder="Search tasks..." value="{{ search_query }}">
+            <input type="text" name="search" placeholder="Search tasks..." value="{{ search_query }}">
             <select name="category">
                 <option value="">Filter by category</option>
                 {% for cat in categories %}
-                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
-                        {{ cat }}
-                    </option>
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
                 {% endfor %}
             </select>
             <button type="submit" class="save-btn">Apply</button>
@@ -321,7 +331,6 @@
         <h2 class="section-title">Today's Tasks</h2>
         {% for task in incomplete_tasks %}
             <div class="task-card" style="border-left-color: {{ task.category_color|default:'#555' }};">
-                
                 <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
                     {% csrf_token %}
                     <button type="submit" class="check-circle{% if task.completed %} completed{% endif %}" title="{% if task.completed %}Mark as incomplete{% else %}Mark as complete{% endif %}">
@@ -329,7 +338,6 @@
                     </button>
                 </form>
 
-                <!-- Task Content -->
                 <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                 <div class="task-details">
                     <div class="task-title">{{ task.title }}</div>
@@ -339,14 +347,15 @@
                         {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
                     </div>
                     <div class="date-info">
-                        {% if task.estimated_time %}Estimated Time: {{ task.estimated_time }} minutes{% endif %}
+                        {% if task.estimated_time %}
+                            Estimated Time: {{ task.estimated_time }} minutes
+                        {% endif %}
                     </div>
                     <div class="date-info">
                         {% if task.category %}Category: {{ task.category }}{% endif %}
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="action-buttons">
                     <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
                     <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
@@ -355,7 +364,6 @@
                     </form>
                 </div>
 
-                <!-- Edit Form -->
                 <div id="edit-form-{{ task.id }}" class="edit-form" style="display: none;">
                     <form method="post" action="{% url 'edit_task' task.id %}">
                         {% csrf_token %}
@@ -366,10 +374,12 @@
 
                 <!-- Timer Controls & Display -->
                 <div class="action-buttons" style="margin-top: 10px;">
-                    <button onclick="startTimer({{ task.id }})" class="add-task-btn">Start</button>
+                    <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
                     <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
-                    <button onclick="stopTimer({{ task.id }})" class="delete-btn">Stop</button>
-                    <div id="timer-display-{{ task.id }}" style="margin-top: 5px; font-size: 0.9em;">Elapsed Time: 0s</div>
+                    <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
+                    <div id="timer-display-{{ task.id }}" class="timer-display" style="margin-top: 5px;">
+                        Time Remaining: {{ task.estimated_time|default:"00" }}:00:00
+                    </div>
                 </div>
             </div>
         {% empty %}
@@ -382,7 +392,6 @@
         <h2 class="section-title">Completed Tasks</h2>
         {% for task in completed_tasks %}
             <div class="task-card completed" style="border-left-color: {{ task.category_color|default:'#555' }};">
-                
                 <form method="post" action="{% url 'toggle_task_complete' task.id %}" class="check-form">
                     {% csrf_token %}
                     <button type="submit" class="check-circle completed" title="Mark as incomplete">
@@ -428,263 +437,135 @@
     </div>
 </div>
 
-<h2 class="section-title">Today's Tasks</h2>
-    {% for task in incomplete_tasks %}
-        <div class="task-card {% if task.is_completed %}completed{% endif %}">
-            <div class="task-details">
-                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-                <div class="task-title">{{ task.title }}</div>
-                <div class="task-desc">{{ task.description }}</div>
-                <div class="date-info">
-                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                    {% if task.category %} | Category: {{ task.category }}{% endif %}
-                    {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
-                    {% with info=running_timers|dict_get:task.id %}
-                        {% if info %}
-                            <div class="timer-display">
-                                Time Remaining: <span id="timer-{{ task.id }}" class="time-remain"></span>
-                                <span id="overtime-{{ task.id }}" class="overtime" style="display:none;"></span>
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-                </div>
-                <div class="action-buttons" style="margin-top: 10px;">
-                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn">Delete</button>
-                    </form>
-                </div>
-                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
-                    <form method="post" action="{% url 'edit_task' task.id %}">
-                        {% csrf_token %}
-                        {{ edit_forms|dict_get:task.id|safe }}
-                        <button type="submit" class="save-btn">Save Changes</button>
-                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
-                    </form>
-                </div>
-            </div>
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                {% csrf_token %}
-                <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
-                    {% if task.is_completed %}<span>✔</span>{% endif %}
-                </button>
-            </form>
-        </div>
-    {% empty %}
-        <p>No tasks for today.</p>
-    {% endfor %}
-
-    <h2 class="section-title">Completed Tasks</h2>
-    {% for task in completed_tasks %}
-        <div class="task-card completed">
-            <div class="task-details">
-                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
-                <div class="task-title">{{ task.title }}</div>
-                <div class="task-desc">{{ task.description }}</div>
-                <div class="date-info">
-                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
-                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
-                    {% if task.category %} | Category: {{ task.category }}{% endif %}
-                    {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
-                    | Spent: {{ spent_times|dict_get:task.id|seconds_to_hms }}
-                </div>
-                <div class="action-buttons" style="margin-top: 10px;">
-                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn">Delete</button>
-                    </form>
-                </div>
-                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
-                    <form method="post" action="{% url 'edit_task' task.id %}">
-                        {% csrf_token %}
-                        {{ edit_forms|dict_get:task.id|safe }}
-                        <button type="submit" class="save-btn">Save Changes</button>
-                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
-                    </form>
-                </div>
-            </div>
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                {% csrf_token %}
-                <button type="submit" class="check-circle completed" title="Mark as incomplete">
-                    <span>✔</span>
-                </button>
-            </form>
-        </div>
-    {% empty %}
-        <p>No tasks completed today.</p>
-    {% endfor %}
-
-
 <script>
+    // Toggle visibility for forms
     function toggleForm(id) {
         const el = document.getElementById(id);
         if (el) {
-            el.style.display = el.style.display === "none" ? "block" : "none";
+            el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
         }
     }
 
-    const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
-    function formatTime(sec) {
-        const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-        const s = String(sec % 60).padStart(2, '0');
+    // Format seconds as hh:mm:ss
+    function formatTime(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
         return `${h}:${m}:${s}`;
     }
 
-    function startCountdown(remEl, data) {
-        const overEl = document.getElementById('overtime-' + data.id);
-        const start = new Date(data.start_time);
-        const est = data.estimated || 0;
-        const initial = data.elapsed || 0;
+    // Timer state and intervals for countdown timers
+    const timers = {};  // taskId: {remainingSeconds, intervalId}
 
-        function update() {
-            const now = new Date();
-            const elapsed = initial + Math.floor((now - start) / 1000);
-            const remaining = est - elapsed;
-            if (remaining <= 0) {
-                if (!remEl.dataset.notified) {
-                    alert('Your time is up! Click Ok to continue working');
-                    remEl.dataset.notified = 'true';
-                    remEl.classList.add('expired');
-                    remEl.textContent = '00:00:00';
-                    if (overEl) overEl.style.display = 'inline';
-                }
-                if (overEl) overEl.textContent = 'Overtime: ' + formatTime(-remaining);
-            } else {
-                remEl.textContent = formatTime(remaining);
-            }
-        }
-        update();
-        setInterval(update, 1000);
+    // Load timer states from localStorage
+    function loadTimers() {
+        const stored = localStorage.getItem('countdownTimers');
+        return stored ? JSON.parse(stored) : {};
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        for (const [id, data] of Object.entries(runningTimers)) {
-            const el = document.getElementById('timer-' + id);
-            if (el) startCountdown(el, { ...data, id: id });
+    // Save timer states to localStorage
+    function saveTimers() {
+        const state = {};
+        for (const taskId in timers) {
+            state[taskId] = { remainingSeconds: timers[taskId].remainingSeconds };
+        }
+        localStorage.setItem('countdownTimers', JSON.stringify(state));
+    }
+
+    // Update timer display for a task
+    function updateDisplay(taskId) {
+        const display = document.getElementById(`timer-display-${taskId}`);
+        if (!display) return;
+        const remaining = timers[taskId]?.remainingSeconds ?? 0;
+        if (remaining > 0) {
+            display.textContent = `Time Remaining: ${formatTime(remaining)}`;
+            display.classList.remove('expired');
+        } else {
+            display.textContent = "Time's Up!";
+            display.classList.add('expired');
+        }
+    }
+
+    // Start countdown timer
+    function startTimer(taskId, estMinutes) {
+        if (timers[taskId]?.intervalId) return; // Already running
+
+        if (!timers[taskId]) {
+            timers[taskId] = {
+                remainingSeconds: estMinutes * 60
+            };
+        }
+
+        updateDisplay(taskId);
+
+        timers[taskId].intervalId = setInterval(() => {
+            timers[taskId].remainingSeconds--;
+            updateDisplay(taskId);
+
+            if (timers[taskId].remainingSeconds <= 0) {
+                clearInterval(timers[taskId].intervalId);
+                timers[taskId].intervalId = null;
+                alert(`Task ${taskId} time is up!`);
+            }
+            saveTimers();
+        }, 1000);
+
+        saveTimers();
+    }
+
+    // Pause countdown timer
+    function pauseTimer(taskId) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
+            timers[taskId].intervalId = null;
+            saveTimers();
+        }
+    }
+
+    // Stop countdown timer and reset
+function stopTimer(taskId, estMinutes) {
+    if (timers[taskId]?.intervalId) {
+        clearInterval(timers[taskId].intervalId);
+    }
+
+    // Calculate elapsed time before resetting
+    const originalSeconds = estMinutes * 60;
+    const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
+    const elapsed = originalSeconds - remaining;
+
+    console.log(`Elapsed time for task ${taskId}: ${elapsed} seconds`);
+
+
+
+    // Reset timer state
+    timers[taskId] = {
+        remainingSeconds: originalSeconds,
+        intervalId: null
+    };
+
+    updateDisplay(taskId);
+    saveTimers();
+}
+
+
+    // On page load, restore timers from localStorage
+    window.addEventListener('load', () => {
+        const storedTimers = loadTimers();
+        for (const taskId in storedTimers) {
+            timers[taskId] = { remainingSeconds: storedTimers[taskId].remainingSeconds, intervalId: null };
+            updateDisplay(taskId);
         }
     });
-</script>
 
-<script>
-  // Timer state holders
-  const elapsedTimes = {};  // {taskId: elapsedSeconds}
-  const timers = {};        // {taskId: intervalId}
+// Get elapsed time in seconds for a task
+    function getElapsedTime(taskId, estMinutes) {
+        const originalSeconds = estMinutes * 60;
+        const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
+        const elapsed = originalSeconds - remaining;
+    return elapsed; // in seconds
+}
 
-  // Load elapsed times from localStorage on page load
-  window.addEventListener('load', () => {
-    const savedTimes = localStorage.getItem('elapsedTimes');
-    if (savedTimes) {
-      Object.assign(elapsedTimes, JSON.parse(savedTimes));
-    }
-    // Update timer displays for all loaded tasks
-    Object.keys(elapsedTimes).forEach(taskId => updateTimerDisplay(taskId));
-  });
 
-  // Save elapsed times to localStorage
-  function saveElapsedTimes() {
-    localStorage.setItem('elapsedTimes', JSON.stringify(elapsedTimes));
-  }
-
-  // Update the timer display for a given task
-  function updateTimerDisplay(taskId) {
-    const display = document.getElementById(`timer-display-${taskId}`);
-    if (!display) return;
-    const seconds = elapsedTimes[taskId] || 0;
-    display.textContent = `Elapsed Time: ${seconds}s`;
-  }
-
-  // Start counting up for the task timer
-  function startCounting(taskId) {
-    if (timers[taskId]) return; // already running
-
-    timers[taskId] = setInterval(() => {
-      elapsedTimes[taskId] = (elapsedTimes[taskId] || 0) + 1;
-      updateTimerDisplay(taskId);
-      saveElapsedTimes();
-    }, 1000);
-  }
-
-  // Pause counting for the task timer
-  function pauseCounting(taskId) {
-    if (timers[taskId]) {
-      clearInterval(timers[taskId]);
-      timers[taskId] = null;
-      saveElapsedTimes();
-    }
-  }
-
-  // Stop counting and reset elapsed time
-  function stopCounting(taskId) {
-    if (timers[taskId]) {
-      clearInterval(timers[taskId]);
-      timers[taskId] = null;
-    }
-    elapsedTimes[taskId] = 0;
-    updateTimerDisplay(taskId);
-    saveElapsedTimes();
-  }
-
-  // Helper function to send POST requests for timer actions
-  async function postTimerAction(url, taskId) {
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ task_id: taskId })
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert(`Timer ${data.status} for task ${data.task_id}`);
-        // Sync timer status with backend
-        if(data.status === 'started') {
-          startCounting(taskId);
-        } else if(data.status === 'paused' || data.status === 'stopped') {
-          pauseCounting(taskId);
-          if(data.status === 'stopped') {
-            stopCounting(taskId);
-          }
-        }
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      alert('Request failed: ' + error);
-    }
-  }
-
-  // CSRF token helper from Django docs
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let cookie of cookies) {
-        cookie = cookie.trim();
-        if (cookie.startsWith(name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-
-  // Button handlers
-  function startTimer(taskId) {
-    postTimerAction('/timers/start/', taskId);
-  }
-  function pauseTimer(taskId) {
-    postTimerAction('/timers/pause/', taskId);
-  }
-  function stopTimer(taskId) {
-    postTimerAction('/timers/stop/', taskId);
-  }
 </script>
 
 </body>
