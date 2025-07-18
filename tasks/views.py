@@ -96,6 +96,8 @@ def daily_tasks(request):
         for task in all_tasks
     }
 
+    task_titles = {task.id: task.title for task in all_tasks}
+
     return render(request, 'tasks/daily_tasks.html', {
         'today': today,
         'incomplete_tasks': incomplete_tasks,
@@ -108,13 +110,15 @@ def daily_tasks(request):
         'spent_times': spent_times,
         'current_category': category_filter,
         'search_query': search_query,
+        'task_titles_json': json.dumps(task_titles),
     })
 
 
 @login_required
 def weekly_tasks(request):
     today = date.today()
-    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    week_offset = int(request.GET.get('week', 0))
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)  # Monday
     end_of_week = start_of_week + timedelta(days=6)          # Sunday
 
     search_query = request.GET.get('search', '').strip()
@@ -159,6 +163,7 @@ def weekly_tasks(request):
 
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     tasks_by_day = {day: [] for day in weekdays}
+    week_day_dates = {day: start_of_week + timedelta(days=i) for i, day in enumerate(weekdays)}
     completed_tasks = []
     for task in all_tasks:
         if task.is_completed:
@@ -184,11 +189,13 @@ def weekly_tasks(request):
         task.id: task.timers.aggregate(Sum("duration"))["duration__sum"] or 0
         for task in all_tasks
     }
-    
+    task_titles = {task.id: task.title for task in all_tasks}
+
     return render(request, 'tasks/weekly_tasks.html', {
         'start_date': start_of_week,
         'end_date': end_of_week,
         'tasks_by_day': tasks_by_day,
+        'week_day_dates': week_day_dates,
         'all_tasks': all_tasks,
         'completed_tasks': completed_tasks,
         'form': form,
@@ -199,6 +206,8 @@ def weekly_tasks(request):
         'spent_times': spent_times,
         'current_category': category_filter,
         'search_query': search_query,
+        'week_offset': week_offset,
+        'task_titles_json': json.dumps(task_titles),
     })
 
 
@@ -229,7 +238,13 @@ def edit_task(request, task_id):
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            updated = form.save(commit=False)
+            hours = int(request.POST.get('estimated_hours', 0) or 0)
+            minutes = int(request.POST.get('estimated_minutes', 0) or 0)
+            seconds = int(request.POST.get('estimated_seconds', 0) or 0)
+            total_seconds = hours * 3600 + minutes * 60 + seconds
+            updated.estimated_time = total_seconds if total_seconds > 0 else None
+            updated.save()
     return redirect(request.META.get('HTTP_REFERER', 'daily_tasks'))
 
 
