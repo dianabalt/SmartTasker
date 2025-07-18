@@ -171,6 +171,15 @@
             display: inline-block;
         }
 
+        .timer-section {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .timer-label {
+            font-weight: bold;
+        }
+
         .time-remain.expired {
             color: red;
         }
@@ -363,32 +372,33 @@
                     <div class="date-info">
                         {% if task.category %}Category: {{ task.category }}{% endif %}
                     </div>
-                </div>
 
-                <div class="action-buttons">
-                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
-                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-btn">Delete</button>
-                    </form>
-                </div>
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                        <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
 
-                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container" style="display: none;">
-                    <form method="post" action="{% url 'edit_task' task.id %}">
-                        {% csrf_token %}
-                        {{ edit_forms|dict_get:task.id|safe }}
-                        <button type="submit" class="save-btn">Save Changes</button>
-                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
-                    </form>
-                </div>
+                    <div id="edit-form-{{ task.id }}" class="edit-form task-form-container" style="display: none;">
+                        <form method="post" action="{% url 'edit_task' task.id %}">
+                            {% csrf_token %}
+                            {{ edit_forms|dict_get:task.id|safe }}
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
+                        </form>
+                    </div>
 
-                <!-- Timer Controls & Display -->
-                <div class="action-buttons" style="margin-top: 10px;">
-                    <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
-                    <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
-                    <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
-                    <div id="timer-display-{{ task.id }}" class="timer-display" style="margin-top: 5px;">
-                        {{ task.estimated_time|seconds_to_hms }}
+                    <div class="timer-section">
+                        <div class="timer-label">Time Remaining</div>
+                        <div id="timer-display-{{ task.id }}" class="timer-display">{{ task.estimated_time|seconds_to_hms }}</div>
+                        <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
+                        <div class="action-buttons" style="margin-top: 10px;">
+                            <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
+                            <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
+                            <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
+                        </div>
                     </div>
                     <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
                 </div>
