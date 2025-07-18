@@ -1,3 +1,4 @@
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,6 +236,8 @@
     <p class="summary-item"><strong>Total Tasks:</strong> {{ total_tasks }}</p>
     <p class="summary-item"><strong>Completed Tasks:</strong> {{ completed_tasks }}</p>
     <p class="summary-item"><strong>Total Estimated Time:</strong> {{ total_estimated_minutes|floatformat:2 }} minutes</p>
+    <p class="summary-item"><strong>Time Spent Today:</strong> {{ today_total|seconds_to_hms }}</p>
+    <p class="summary-item"><strong>Time Spent This Week:</strong> {{ week_total|seconds_to_hms }}</p>
 
     <h3>Estimated vs Actual Time Per Task (Minutes)</h3>
     <canvas id="estimatedTimeChart" width="600" height="300"></canvas>
