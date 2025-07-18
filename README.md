@@ -26,6 +26,19 @@
 - **Database**: SQLite
 - **Version control and collaboration**: GitHub 
 
+## Running application
+
+
+### Windows
+1. Ensure you have python and pip installed through `https://www.python.org`
+2. Install all dependencies using the requirements.txt files. `pip install -r ./requirements.txt`
+3. Run `python ./manage.py migrate` to generate the database file
+4. Run the django server by executing `python manage.py runserver`
+5. Thats it! You can access the interface by going to `http://localhost:8000`
+
+### Linux
+Soon TM
+
 ## Team Members
 - Diana Balteanu
 - Kaya Sude

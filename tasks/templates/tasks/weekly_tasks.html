@@ -300,7 +300,7 @@
         {% for task in tasks %}
             <div class="task-card {% if task.is_completed %}completed{% endif %}">
                 <div class="task-details">
-                    <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+                    <div class="category-symbol" style="color: {{ task.category_color|default:'#000000' }}">ᯓ★ˎˊ˗</div>
                     <div class="task-title">{{ task.title }}</div>
                     <div class="task-desc">{{ task.description }}</div>
                     <div class="date-info">
@@ -334,8 +334,6 @@
             </div>
         {% endfor %}
     {% endfor %}
-</div>
-
 </div>
 
 <script>
