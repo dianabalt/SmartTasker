@@ -1,7 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class DailySummary(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField()
     total_time_spent = models.DurationField()
     productive_time = models.DurationField()
@@ -15,6 +17,7 @@ class DailySummary(models.Model):
 
 
 class WeeklySummary(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     week_start = models.DateField()
     week_end = models.DateField()
     total_time_spent = models.DurationField()
