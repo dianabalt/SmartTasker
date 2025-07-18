@@ -11,6 +11,12 @@ from timers.models import Timer
 
 
 @login_required
+def home(request):
+    # Simple home view rendering a template
+    return render(request, 'tasks/home.html')
+
+
+@login_required
 def daily_tasks(request):
     today = date.today()
 
@@ -31,6 +37,18 @@ def daily_tasks(request):
 
     incomplete_tasks = all_tasks.filter(is_completed=False)
     completed_tasks = all_tasks.filter(is_completed=True)
+
+    running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
+    running = {
+        t.task_id: {
+            'start_time': t.start_time.isoformat(),
+            'elapsed': t.elapsed_time,
+            'estimated': t.task.estimated_time or 0,
+            'title': t.task.title,
+            'id': t.task_id,
+        }
+        for t in running_qs
+    }
 
     if request.method == 'POST' and 'task_id' not in request.POST:
         form = TaskForm(request.POST)
@@ -60,6 +78,7 @@ def daily_tasks(request):
 
     edit_forms = {task.id: TaskForm(instance=task) for task in all_tasks}
     categories = Task.objects.filter(user=request.user).exclude(category='').values_list('category', flat=True).distinct()
+
     running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
     running = {
         t.task_id: {
@@ -113,7 +132,6 @@ def weekly_tasks(request):
     if category_filter:
         all_tasks = all_tasks.filter(category=category_filter)
 
-    # Handle new task creation
     if request.method == 'POST' and 'task_id' not in request.POST:
         form = TaskForm(request.POST)
         if form.is_valid():
@@ -139,7 +157,6 @@ def weekly_tasks(request):
     else:
         form = TaskForm()
 
-    # Group by day for incomplete tasks
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     tasks_by_day = {day: [] for day in weekdays}
     completed_tasks = []
@@ -222,8 +239,3 @@ def delete_task(request, task_id):
     if request.method == 'POST':
         task.delete()
     return redirect(request.META.get('HTTP_REFERER', 'daily_tasks'))
-
-@login_required
-def home(request):
-    return render(request, 'tasks/home.html')
-
