@@ -159,6 +159,20 @@
             font-size: 16px;
         }
 
+        .timer-display {
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        .time-remain.expired {
+            color: red;
+        }
+
+        .overtime {
+            color: red;
+            margin-left: 10px;
+        }
+
         .edit-form {
             display: none;
             margin-top: 10px;
@@ -288,6 +302,7 @@
                 <input type="number" name="estimated_hours" min="0" placeholder="Hours">
                 <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
                 <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
+                <label style="margin-left:10px;">{{ form.start_timer }} Start timer now</label>
             </div>
 
             <button type="submit" class="save-btn">Save Task</button>
@@ -308,6 +323,15 @@
                         {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
                         {% if task.category %} | Category: {{ task.category }}{% endif %}
                         {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
+                        {% with info=running_timers|dict_get:task.id %}
+                            {% if info %}
+                                <div class="timer-display">
+                                    Time Remaining: <span id="timer-{{ task.id }}" class="time-remain"></span>
+                                    <span id="overtime-{{ task.id }}" class="overtime" style="display:none;"></span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        {% if task.is_completed %} | Spent: {{ spent_times|dict_get:task.id|seconds_to_hms }}{% endif %}
                     </div>
                     <div class="action-buttons" style="margin-top: 10px;">
                         <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
@@ -347,6 +371,49 @@
             form.style.display = "none";
         }
     }
+
+    const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
+
+    function formatTime(sec) {
+        const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    function startCountdown(remEl, data) {
+        const overEl = document.getElementById('overtime-' + data.id);
+        const start = new Date(data.start_time);
+        const est = data.estimated || 0;
+        const initial = data.elapsed || 0;
+
+        function update() {
+            const now = new Date();
+            const elapsed = initial + Math.floor((now - start) / 1000);
+            const remaining = est - elapsed;
+            if (remaining <= 0) {
+                if (!remEl.dataset.notified) {
+                    alert('Your time is up! Click Ok to continue working');
+                    remEl.dataset.notified = 'true';
+                    remEl.classList.add('expired');
+                    remEl.textContent = '00:00:00';
+                    if (overEl) overEl.style.display = 'inline';
+                }
+                if (overEl) overEl.textContent = 'Overtime: ' + formatTime(-remaining);
+            } else {
+                remEl.textContent = formatTime(remaining);
+            }
+        }
+        update();
+        setInterval(update, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        for (const [id, data] of Object.entries(runningTimers)) {
+            const el = document.getElementById('timer-' + id);
+            if (el) startCountdown(el, { ...data, id: id });
+        }
+    });
 </script>
 
 </body>
