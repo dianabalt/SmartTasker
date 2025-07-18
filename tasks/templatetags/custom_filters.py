@@ -29,3 +29,24 @@ def minutes_to_hms(value):
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     except (TypeError, ValueError):
         return ''
+
+@register.filter
+def seconds_to_hours(value):
+    try:
+        return int(value) // 3600
+    except (TypeError, ValueError):
+        return 0
+
+@register.filter
+def seconds_to_minutes(value):
+    try:
+        return (int(value) % 3600) // 60
+    except (TypeError, ValueError):
+        return 0
+
+@register.filter
+def seconds_to_seconds(value):
+    try:
+        return int(value) % 60
+    except (TypeError, ValueError):
+        return 0
