@@ -12,8 +12,7 @@ class Task(models.Model):
     deadline = models.DateField(null=True, blank=True)
     goal_date = models.DateField(null=True, blank=True)
     category = models.CharField(max_length=100, blank=True)
-    category_color = models.CharField(max_length=7, default='#000000') 
-    completed = models.BooleanField(default=False)
+    category_color = models.CharField(max_length=7, default='#000000')
     estimated_time = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):

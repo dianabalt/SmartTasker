@@ -4,9 +4,23 @@ venv/
 # Python bytecode
 __pycache__/
 *.pyc
-
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
 # SQLite database
 db.sqlite3
 
 # VS Code settings (optional)
 .vscode/
+
+# MACOS meta data
+.DS_Store/
+
+# Environment variables
+.env
+
+# Static files
+staticfiles/
+
+# Media files
+media/
