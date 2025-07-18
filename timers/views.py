@@ -1,94 +1,68 @@
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
 from .models import Timer
 from tasks.models import Task
 
 @csrf_exempt
 def start_timer(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            task_id = data.get("task_id")
-            if not task_id:
-                return JsonResponse({"error": "Missing task_id"}, status=400)
-
-            task = Task.objects.get(id=task_id)
-            # Stop existing timers
-            Timer.objects.filter(task=task, is_running=True).update(is_running=False)
-
-            # Start a new timer
-            Timer.objects.create(
-                task=task,
-                start_time=timezone.now(),
-                is_running=True
-            )
-
-            return JsonResponse({"status": "started", "task_id": task_id})
+        data = json.loads(request.body)
+        task_id = data.get("task_id")
+        task = Task.objects.get(id=task_id)
         
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task not found"}, status=404)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
+        timer, created = Timer.objects.get_or_create(task=task, defaults={'is_pomodoro': True})
+        timer.start()
+        
+        return JsonResponse({
+            "status": "started",
+            "remaining_time": timer.get_remaining_time(),
+            "is_break": timer.is_break,
+            "pomodoro_count": timer.pomodoro_count
+        })
 
 @csrf_exempt
 def pause_timer(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            task_id = data.get("task_id")
-
-            if not task_id:
-                return JsonResponse({"error": "Missing task_id"}, status=400)
-
-            task = Task.objects.get(id=task_id)
-            timer = Timer.objects.filter(task=task, is_running=True).last()
-
-            if timer:
-                elapsed = timezone.now() - timer.start_time
-                timer.elapsed_time += int(elapsed.total_seconds())
-                timer.is_running = False
-                timer.save()
-
-            return JsonResponse({"status": "paused", "task_id": task_id})
-
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task not found"}, status=404)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
+        data = json.loads(request.body)
+        task_id = data.get("task_id")
+        task = Task.objects.get(id=task_id)
+        
+        timer = Timer.objects.filter(task=task).last()
+        if timer:
+            timer.pause()
+        
+        return JsonResponse({"status": "paused"})
 
 @csrf_exempt
-def stop_timer(request):
+def complete_pomodoro(request):
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            task_id = data.get("task_id")
+        data = json.loads(request.body)
+        task_id = data.get("task_id")
+        task = Task.objects.get(id=task_id)
+        
+        timer = Timer.objects.filter(task=task).last()
+        if timer:
+            timer.complete_pomodoro()
+        
+        return JsonResponse({
+            "status": "completed",
+            "is_break": timer.is_break,
+            "pomodoro_count": timer.pomodoro_count
+        })
 
-            if not task_id:
-                return JsonResponse({"error": "Missing task_id"}, status=400)
-
-            task = Task.objects.get(id=task_id)
-            timer = Timer.objects.filter(task=task, is_running=True).last()
-
-            if timer:
-                elapsed = timezone.now() - timer.start_time
-                timer.elapsed_time += int(elapsed.total_seconds())
-                timer.is_running = False
-                timer.save()
-
-            return JsonResponse({"status": "stopped", "task_id": task_id})
-
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task not found"}, status=404)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
+@csrf_exempt
+def get_timer_status(request, task_id):
+    task = Task.objects.get(id=task_id)
+    timer = Timer.objects.filter(task=task).last()
+    
+    if timer:
+        return JsonResponse({
+            "is_running": timer.is_running,
+            "remaining_time": timer.get_remaining_time(),
+            "elapsed_time": timer.get_elapsed_time(),
+            "is_break": timer.is_break,
+            "pomodoro_count": timer.pomodoro_count
+        })
+    
+    return JsonResponse({"is_running": False, "remaining_time": 1500})

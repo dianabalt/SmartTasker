@@ -295,11 +295,158 @@
         </form>
     </div>
 
+    <div class="day-header">Incomplete Tasks</div>
+    {% for task in incomplete_tasks %}
+        <div class="task-card">
+            <div class="task-details">
+                <div class="category-symbol" style="color: {{ task.category_color|default:'#000000' }}">ᯓ★ˎˊ˗</div>
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="date-info">
+                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                    {% if task.category %} | Category: {{ task.category }}{% endif %}
+                    {% if task.estimated_time %} | Est: {{ task.estimated_time }} min{% endif %}
+                </div>
+                <div class="pomodoro-timer" id="timer-{{ task.id }}" style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                    <div class="timer-display" style="font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 10px;">
+                        <span id="time-{{ task.id }}">25:00</span>
+                        <div style="font-size: 12px; margin-top: 5px;">
+                            <span id="status-{{ task.id }}">Work Session</span> | 
+                            Pomodoros: <span id="count-{{ task.id }}">0</span>
+                        </div>
+                    </div>
+                    <div class="timer-controls" style="text-align: center;">
+                        <button onclick="startTimer({{ task.id }})" class="save-btn" style="margin: 2px;">Start</button>
+                        <button onclick="pauseTimer({{ task.id }})" class="edit-btn" style="margin: 2px;">Pause</button>
+                        <button onclick="completePomodoro({{ task.id }})" class="delete-btn" style="margin: 2px;">Complete</button>
+                    </div>
+                </div>
+                <div class="action-buttons" style="margin-top: 10px;">
+                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
+                <div id="edit-form-{{ task.id }}" class="edit-form">
+                    <form method="post" action="{% url 'edit_task' task.id %}">
+                        {% csrf_token %}
+                        {{ edit_forms|dict_get:task.id|safe }}
+                        <button type="submit" class="save-btn">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                {% csrf_token %}
+                <button type="submit" class="check-circle" title="Toggle complete">
+                    {% if task.is_completed %}<span>✔</span>{% endif %}
+                </button>
+            </form>
+        </div>
+    {% endfor %}
+
+    <div class="day-header">Completed Tasks</div>
+    {% for task in completed_tasks %}
+        <div class="task-card completed">
+            <div class="task-details">
+                <div class="category-symbol" style="color: {{ task.category_color|default:'#000000' }}">ᯓ★ˎˊ˗</div>
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="date-info">
+                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                    {% if task.category %} | Category: {{ task.category }}{% endif %}
+                    {% if task.estimated_time %} | Est: {{ task.estimated_time }} min{% endif %}
+                </div>
+            </div>
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                {% csrf_token %}
+                <button type="submit" class="check-circle completed" title="Toggle complete">
+                    <span>✔</span>
+                </button>
+            </form>
+        </div>
+    {% endfor %}
+</div>
+
 <script>
+    let timers = {};
+    
     function toggleForm(id) {
         const form = document.getElementById(id);
         if (!form) return;
         form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+    }
+    
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    function updateTimer(taskId, remainingTime, isBreak, pomodoroCount) {
+        document.getElementById(`time-${taskId}`).textContent = formatTime(remainingTime);
+        document.getElementById(`status-${taskId}`).textContent = isBreak ? 'Break Time' : 'Work Session';
+        document.getElementById(`count-${taskId}`).textContent = pomodoroCount;
+    }
+    
+    function startTimer(taskId) {
+        fetch('/timers/start/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({task_id: taskId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (timers[taskId]) clearInterval(timers[taskId]);
+            
+            timers[taskId] = setInterval(() => {
+                fetch(`/timers/status/${taskId}/`)
+                .then(response => response.json())
+                .then(status => {
+                    updateTimer(taskId, status.remaining_time, status.is_break, status.pomodoro_count);
+                    
+                    if (status.remaining_time <= 0) {
+                        clearInterval(timers[taskId]);
+                        alert(status.is_break ? 'Break time is over!' : 'Pomodoro completed!');
+                    }
+                });
+            }, 1000);
+            
+            updateTimer(taskId, data.remaining_time, data.is_break, data.pomodoro_count);
+        });
+    }
+    
+    function pauseTimer(taskId) {
+        fetch('/timers/pause/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({task_id: taskId})
+        })
+        .then(() => {
+            if (timers[taskId]) {
+                clearInterval(timers[taskId]);
+                delete timers[taskId];
+            }
+        });
+    }
+    
+    function completePomodoro(taskId) {
+        fetch('/timers/complete/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({task_id: taskId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (timers[taskId]) {
+                clearInterval(timers[taskId]);
+                delete timers[taskId];
+            }
+            updateTimer(taskId, data.is_break ? 300 : 1500, data.is_break, data.pomodoro_count);
+            alert(data.is_break ? 'Starting break time!' : 'Break over, back to work!');
+        });
     }
 </script>
 </body>
