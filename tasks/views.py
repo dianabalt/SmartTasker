@@ -47,12 +47,14 @@ def daily_tasks(request):
             task.save()
 
             if form.cleaned_data.get('start_timer'):
-                Timer.objects.create(
+                if total_seconds > 0:
+                    Timer.objects.create(
                     user=request.user,
                     task=task,
                     start_time=timezone.now(),
                     is_running=True,
                 )
+
             return redirect('daily_tasks')
     else:
         form = TaskForm()
@@ -69,11 +71,6 @@ def daily_tasks(request):
             'id': t.task_id,
         }
         for t in running_qs
-    }
-
-    spent_times = {
-        task.id: task.timers.aggregate(Sum('duration'))['duration__sum'] or 0
-        for task in all_tasks
     }
 
     spent_times = {
@@ -132,7 +129,7 @@ def weekly_tasks(request):
 
             task.save()
 
-            if form.cleaned_data.get('start_timer'):
+            if total_seconds > 0:
                 Timer.objects.create(
                     user=request.user,
                     task=task,
@@ -164,7 +161,11 @@ def weekly_tasks(request):
         }
         for t in running_qs
     }
-
+    spent_times = {
+        task.id: task.timers.aggregate(Sum("duration"))["duration__sum"] or 0
+        for task in all_tasks
+    }
+    
     return render(request, 'tasks/weekly_tasks.html', {
         'start_date': start_of_week,
         'end_date': end_of_week,
