@@ -314,6 +314,12 @@
         <div class="day-header">{{ day }}</div>
         {% for task in tasks %}
             <div class="task-card {% if task.is_completed %}completed{% endif %}">
+                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
+                        {% if task.is_completed %}<span>✔</span>{% endif %}
+                    </button>
+                </form>
                 <div class="task-details">
                     <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                     <div class="task-title">{{ task.title }}</div>
@@ -350,12 +356,6 @@
                         </form>
                     </div>
                 </div>
-                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
-                        {% if task.is_completed %}<span>✔</span>{% endif %}
-                    </button>
-                </form>
             </div>
         {% endfor %}
     {% endfor %}
@@ -363,6 +363,12 @@
     <h2 class="section-title">Completed Tasks</h2>
     {% for task in completed_tasks %}
         <div class="task-card completed">
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                {% csrf_token %}
+                <button type="submit" class="check-circle completed" title="Mark as incomplete">
+                    <span>✔</span>
+                </button>
+            </form>
             <div class="task-details">
                 <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                 <div class="task-title">{{ task.title }}</div>
@@ -390,12 +396,6 @@
                     </form>
                 </div>
             </div>
-            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
-                {% csrf_token %}
-                <button type="submit" class="check-circle completed" title="Mark as incomplete">
-                    <span>✔</span>
-                </button>
-            </form>
         </div>
     {% empty %}
         <p>No tasks completed this week.</p>
