@@ -46,9 +46,8 @@ def daily_tasks(request):
 
             task.save()
 
-            if form.cleaned_data.get('start_timer'):
-                if total_seconds > 0:
-                    Timer.objects.create(
+            if total_seconds > 0:
+                Timer.objects.create(
                     user=request.user,
                     task=task,
                     start_time=timezone.now(),
@@ -143,8 +142,11 @@ def weekly_tasks(request):
     # Group by day for incomplete tasks
     weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     tasks_by_day = {day: [] for day in weekdays}
+    completed_tasks = []
     for task in all_tasks:
-        if not task.is_completed:
+        if task.is_completed:
+            completed_tasks.append(task)
+        else:
             weekday_name = task.date.strftime('%A')
             tasks_by_day[weekday_name].append(task)
 
@@ -171,6 +173,7 @@ def weekly_tasks(request):
         'end_date': end_of_week,
         'tasks_by_day': tasks_by_day,
         'all_tasks': all_tasks,
+        'completed_tasks': completed_tasks,
         'form': form,
         'edit_forms': edit_forms,
         'categories': categories,
