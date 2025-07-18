@@ -1,3 +1,4 @@
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,7 +190,9 @@
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
         </form>
     </div>
 </div>
@@ -202,7 +205,7 @@
         <ul>
             {% for task in todays_tasks %}
                 <li>
-                    <strong>{{ task.title }}</strong> - {% if task.completed %}Completed{% else %}Pending{% endif %}
+            <strong>{{ task.title }}</strong> - {% if task.is_completed %}Completed{% else %}Pending{% endif %}
                     <br />
                     Deadline: {{ task.deadline|date:"M d, Y" }}
                 </li>
@@ -233,8 +236,10 @@
     <p class="summary-item"><strong>Total Tasks:</strong> {{ total_tasks }}</p>
     <p class="summary-item"><strong>Completed Tasks:</strong> {{ completed_tasks }}</p>
     <p class="summary-item"><strong>Total Estimated Time:</strong> {{ total_estimated_minutes|floatformat:2 }} minutes</p>
+    <p class="summary-item"><strong>Time Spent Today:</strong> {{ today_total|seconds_to_hms }}</p>
+    <p class="summary-item"><strong>Time Spent This Week:</strong> {{ week_total|seconds_to_hms }}</p>
 
-    <h3>Estimated Time Per Task (Minutes)</h3>
+    <h3>Estimated vs Actual Time Per Task (Minutes)</h3>
     <canvas id="estimatedTimeChart" width="600" height="300"></canvas>
 </div>
 
@@ -243,14 +248,23 @@
     const estimatedTimeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: {{ task_names|safe }},
-            datasets: [{
-                label: 'Estimated Time (minutes)',
-                data: {{ estimated_minutes|safe }},
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
+            labels: JSON.parse('{{ task_names|escapejs }}'),
+            datasets: [
+                {
+                    label: 'Estimated Time (minutes)',
+                    data: JSON.parse('{{ estimated_minutes|escapejs }}'),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Actual Time (minutes)',
+                    data: JSON.parse('{{ actual_minutes_per_task|escapejs }}'),
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
         },
         options: {
             scales: {
