@@ -2,10 +2,12 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from .models import Timer
 from tasks.models import Task
 
 @csrf_exempt
+@login_required
 def start_timer(request):
     if request.method == "POST":
         try:
@@ -14,12 +16,13 @@ def start_timer(request):
             if not task_id:
                 return JsonResponse({"error": "Missing task_id"}, status=400)
 
-            task = Task.objects.get(id=task_id)
+            task = Task.objects.get(id=task_id, user=request.user)
             # Stop existing timers
-            Timer.objects.filter(task=task, is_running=True).update(is_running=False)
+            Timer.objects.filter(task=task, user=request.user, is_running=True).update(is_running=False)
 
             # Start a new timer
             Timer.objects.create(
+                user=request.user,
                 task=task,
                 start_time=timezone.now(),
                 is_running=True
@@ -36,6 +39,7 @@ def start_timer(request):
 
 
 @csrf_exempt
+@login_required
 def pause_timer(request):
     if request.method == "POST":
         try:
@@ -45,8 +49,8 @@ def pause_timer(request):
             if not task_id:
                 return JsonResponse({"error": "Missing task_id"}, status=400)
 
-            task = Task.objects.get(id=task_id)
-            timer = Timer.objects.filter(task=task, is_running=True).last()
+            task = Task.objects.get(id=task_id, user=request.user)
+            timer = Timer.objects.filter(task=task, user=request.user, is_running=True).last()
 
             if timer:
                 elapsed = timezone.now() - timer.start_time
@@ -65,6 +69,7 @@ def pause_timer(request):
 
 
 @csrf_exempt
+@login_required
 def stop_timer(request):
     if request.method == "POST":
         try:
@@ -74,8 +79,8 @@ def stop_timer(request):
             if not task_id:
                 return JsonResponse({"error": "Missing task_id"}, status=400)
 
-            task = Task.objects.get(id=task_id)
-            timer = Timer.objects.filter(task=task, is_running=True).last()
+            task = Task.objects.get(id=task_id, user=request.user)
+            timer = Timer.objects.filter(task=task, user=request.user, is_running=True).last()
 
             if timer:
                 elapsed = timezone.now() - timer.start_time
