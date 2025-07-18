@@ -3,6 +3,7 @@ from django.shortcuts import render
 from datetime import date, timedelta
 import json
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from tasks.models import Task
 from timers.models import Timer
 from django.db.models import Sum
@@ -57,15 +58,27 @@ def home(request):
         total_sec = get_total_elapsed_seconds(request.user, task=task)
         actual_minutes.append(total_sec / 60)  # convert seconds to minutes
 
-    today_seconds = Timer.objects.filter(
+    # Get all timers from today
+    today_timers = Timer.objects.filter(
         user=request.user,
-        start_time__date=today
-    ).aggregate(total=Sum('elapsed_time'))['total'] or 0
+        created_at__date=today
+    )
+    
+    # Calculate total seconds including running timers
+    today_seconds = 0
+    for timer in today_timers:
+        today_seconds += timer.get_elapsed_time()
 
-    week_seconds = Timer.objects.filter(
+    # Get all timers from this week
+    week_timers = Timer.objects.filter(
         user=request.user,
-        start_time__date__range=(week_start, week_end)
-    ).aggregate(total=Sum('elapsed_time'))['total'] or 0
+        created_at__date__range=(week_start, week_end)
+    )
+    
+    # Calculate total seconds including running timers
+    week_seconds = 0
+    for timer in week_timers:
+        week_seconds += timer.get_elapsed_time()
 
     def seconds_to_hms(seconds):
         h = seconds // 3600
@@ -86,4 +99,41 @@ def home(request):
         "today_time_str": seconds_to_hms(today_seconds),
         "week_time_str": seconds_to_hms(week_seconds),
     }
+    
     return render(request, "dashboard/dashboard.html", context)
+
+
+@login_required
+def refresh_time(request):
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    today_timers = Timer.objects.filter(
+        user=request.user,
+        created_at__date=today
+    )
+    
+    today_seconds = 0
+    for timer in today_timers:
+        today_seconds += timer.get_elapsed_time()
+    
+    week_timers = Timer.objects.filter(
+        user=request.user,
+        created_at__date__range=(week_start, week_end)
+    )
+    
+    week_seconds = 0
+    for timer in week_timers:
+        week_seconds += timer.get_elapsed_time()
+    
+    def seconds_to_hms(seconds):
+        h = seconds // 3600
+        m = (seconds % 3600) // 60
+        s = seconds % 60
+        return f"{h}h {m}m {s}s"
+    
+    return JsonResponse({
+        'today_time': seconds_to_hms(today_seconds),
+        'week_time': seconds_to_hms(week_seconds)
+    })
