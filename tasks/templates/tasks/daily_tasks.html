@@ -130,15 +130,6 @@
             color: #333;
         }
 
-        .day-header {
-            margin-top: 30px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ccc;
-            font-size: 18px;
-            font-weight: bold;
-            color: #ccc;
-        }
-
         .check-circle {
             width: 28px;
             height: 28px;
@@ -156,7 +147,7 @@
             border-color: darkgreen;
         }
 
-        .check-circle span {
+        .check-circle span, .check-circle.completed {
             color: darkgreen;
             font-size: 16px;
         }
@@ -195,8 +186,7 @@
             display: none;
             margin-top: 10px;
         }
-        
-        /* Make sure edit forms are hidden by default */
+
         .edit-form.task-form-container {
             display: none;
         }
@@ -256,8 +246,6 @@
             transform: scale(1.05);
             background-color: #009ACD;
         }
-
-        /* Expired timer style */
         .expired {
             color: red !important;
             font-weight: bold;
@@ -294,39 +282,32 @@
                 <label for="{{ form.title.id_for_label }}">Title:</label><br>
                 {{ form.title }}
             </p>
-
             <p>
                 <label for="{{ form.description.id_for_label }}">Description:</label><br>
                 {{ form.description }}
             </p>
-
             <p>
                 <label for="{{ form.deadline.id_for_label }}">Deadline:</label><br>
                 {{ form.deadline }}
             </p>
-
             <p>
                 <label for="{{ form.goal_date.id_for_label }}">Goal date:</label><br>
                 {{ form.goal_date }}
             </p>
-
             <div class="time-input-group">
                 <label style="margin-right: 10px;">Estimated Duration:</label>
                 <input type="number" name="estimated_hours" min="0" placeholder="Hours">
                 <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
                 <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
             </div>
-
             <p>
                 <label for="{{ form.category.id_for_label }}">Category:</label><br>
                 {{ form.category }}
             </p>
-
             <p>
                 <label for="{{ form.category_color.id_for_label }}">Category color:</label><br>
                 {{ form.category_color }}
             </p>
-
             <button type="submit" class="save-btn">Save Task</button>
             <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
         </form>
@@ -359,9 +340,7 @@
                         {% if task.completed %}✔{% endif %}
                     </button>
                 </form>
-                
                 <div class="task-details">
-                    
                     <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                     <div class="task-title">{{ task.title }}</div>
                     <div class="task-desc">{{ task.description }}</div>
@@ -369,63 +348,60 @@
                         {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
                         {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
                         {% if task.category %} | Category: {{ task.category }}{% endif %}
-                        {% if task.estimated_time %} | Est: {{ task.estimated_time }} minutes{% endif %}
+                        {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
                     </div>
-                    
                     <div class="action-buttons" style="margin-top: 10px;">
-                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                        <button class="edit-btn" type="button" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
                         <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="delete-btn">Delete</button>
                         </form>
-                        
-                    <!-- Timer Controls & Display -->
+                    </div>
                     <div class="action-buttons" style="margin-top: 10px;">
-                        <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
-                        <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
-                        <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
+                        <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn" type="button">Start</button>
+                        <button onclick="pauseTimer({{ task.id }})" class="add-task-btn" type="button">Pause</button>
+                        <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn" type="button">Stop</button>
                         <div id="timer-display-{{ task.id }}" class="timer-display" style="margin-top: 5px;">
                             Time Remaining: {{ task.estimated_time|default:"00" }}:00:00
                         </div>
                     </div>
-                </div>
-
-                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
-                    <form method="post" action="{% url 'edit_task' task.id %}">
-                        {% csrf_token %}
-                        <p>
-                            <label>Title:</label><br>
-                            <input type="text" name="title" value="{{ task.title }}">
-                        </p>
-                        <p>
-                            <label>Description:</label><br>
-                            <textarea name="description">{{ task.description }}</textarea>
-                        </p>
-                        <p>
-                            <label>Deadline:</label><br>
-                            <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
-                        </p>
-                        <p>
-                            <label>Goal date:</label><br>
-                            <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
-                        </p>
-                        <div class="time-input-group">
-                            <label style="margin-right: 10px;">Estimated Duration:</label>
-                            <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
-                            <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
-                            <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
-                        </div>
-                        <p>
-                            <label>Category:</label><br>
-                            <input type="text" name="category" value="{{ task.category }}">
-                        </p>
-                        <p>
-                            <label>Category color:</label><br>
-                            <input type="color" name="category_color" value="{{ task.category_color }}">
-                        </p>
-                        <button type="submit" class="save-btn">Save Changes</button>
-                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
-                    </form>
+                    <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
+                        <form method="post" action="{% url 'edit_task' task.id %}">
+                            {% csrf_token %}
+                            <p>
+                                <label>Title:</label><br>
+                                <input type="text" name="title" value="{{ task.title }}">
+                            </p>
+                            <p>
+                                <label>Description:</label><br>
+                                <textarea name="description">{{ task.description }}</textarea>
+                            </p>
+                            <p>
+                                <label>Deadline:</label><br>
+                                <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
+                            </p>
+                            <p>
+                                <label>Goal date:</label><br>
+                                <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
+                            </p>
+                            <div class="time-input-group">
+                                <label style="margin-right: 10px;">Estimated Duration:</label>
+                                <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
+                                <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
+                                <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
+                            </div>
+                            <p>
+                                <label>Category:</label><br>
+                                <input type="text" name="category" value="{{ task.category }}">
+                            </p>
+                            <p>
+                                <label>Category color:</label><br>
+                                <input type="color" name="category_color" value="{{ task.category_color }}">
+                            </p>
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         {% empty %}
@@ -444,7 +420,6 @@
                         <span>✔</span>
                     </button>
                 </form>
-
                 <div class="task-details">
                     <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
                     <div class="task-title">{{ task.title }}</div>
@@ -453,17 +428,15 @@
                         {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
                         {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
                         {% if task.category %} | Category: {{ task.category }}{% endif %}
-                        {% if task.estimated_time %} | Est: {{ task.estimated_time }} minutes{% endif %}
+                        {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
                     </div>
-                    
                     <div class="action-buttons" style="margin-top: 10px;">
-                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                        <button class="edit-btn" type="button" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
                         <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
                             {% csrf_token %}
                             <button type="submit" class="delete-btn">Delete</button>
                         </form>
                     </div>
-
                     <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
                         <form method="post" action="{% url 'edit_task' task.id %}">
                             {% csrf_token %}
@@ -510,17 +483,14 @@
 </div>
 
 <script>
-    // Toggle visibility for forms
     function toggleForm(id) {
         const el = document.getElementById(id);
         if (el) {
             el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
         }
     }
-
     const taskTitles = JSON.parse('{{ task_titles_json|escapejs }}');
 
-    // Format seconds as hh:mm:ss
     function formatTime(seconds) {
         const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
         const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
@@ -528,16 +498,13 @@
         return `${h}:${m}:${s}`;
     }
 
-    // Timer state and intervals for countdown timers
-    const timers = {};  // taskId: {remainingSeconds, intervalId, notified}
+    const timers = {};
 
-    // Load timer states from localStorage
     function loadTimers() {
         const stored = localStorage.getItem('countdownTimers');
         return stored ? JSON.parse(stored) : {};
     }
 
-    // Save timer states to localStorage
     function saveTimers() {
         const state = {};
         for (const taskId in timers) {
@@ -549,7 +516,6 @@
         localStorage.setItem('countdownTimers', JSON.stringify(state));
     }
 
-    // Update timer display for a task
     function updateDisplay(taskId) {
         const display = document.getElementById(`timer-display-${taskId}`);
         const overtimeEl = document.getElementById(`overtime-display-${taskId}`);
@@ -572,29 +538,23 @@
         }
     }
 
-    // Start countdown timer
     function startTimer(taskId, estSeconds) {
-        if (timers[taskId]?.intervalId) return; // Already running
-
+        if (timers[taskId]?.intervalId) return;
         if (!timers[taskId]) {
             timers[taskId] = {
                 remainingSeconds: estSeconds,
                 notified: false
             };
         }
-
         updateDisplay(taskId);
-
         timers[taskId].intervalId = setInterval(() => {
             timers[taskId].remainingSeconds--;
             updateDisplay(taskId);
             saveTimers();
         }, 1000);
-
         saveTimers();
     }
 
-    // Pause countdown timer
     function pauseTimer(taskId) {
         if (timers[taskId]?.intervalId) {
             clearInterval(timers[taskId].intervalId);
@@ -603,36 +563,22 @@
         }
     }
 
-    // Stop countdown timer and reset
-function stopTimer(taskId, estSeconds) {
-    if (timers[taskId]?.intervalId) {
-        clearInterval(timers[taskId].intervalId);
+    function stopTimer(taskId, estSeconds) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
+        }
+        const originalSeconds = estSeconds;
+        timers[taskId] = {
+            remainingSeconds: originalSeconds,
+            intervalId: null,
+            notified: false
+        };
+        const overEl = document.getElementById(`overtime-display-${taskId}`);
+        if (overEl) overEl.style.display = 'none';
+        updateDisplay(taskId);
+        saveTimers();
     }
 
-    // Calculate elapsed time before resetting
-    const originalSeconds = estSeconds;
-    const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
-    const elapsed = originalSeconds - remaining;
-
-    console.log(`Elapsed time for task ${taskId}: ${elapsed} seconds`);
-
-
-
-    // Reset timer state
-    timers[taskId] = {
-        remainingSeconds: originalSeconds,
-        intervalId: null,
-        notified: false
-    };
-    const overEl = document.getElementById(`overtime-display-${taskId}`);
-    if (overEl) overEl.style.display = 'none';
-
-    updateDisplay(taskId);
-    saveTimers();
-}
-
-
-    // On page load, restore timers from localStorage
     window.addEventListener('load', () => {
         const storedTimers = loadTimers();
         for (const taskId in storedTimers) {
@@ -644,16 +590,6 @@ function stopTimer(taskId, estSeconds) {
             updateDisplay(taskId);
         }
     });
-
-// Get elapsed time in seconds for a task
-    function getElapsedTime(taskId, estSeconds) {
-        const originalSeconds = estSeconds;
-        const remaining = timers[taskId]?.remainingSeconds ?? originalSeconds;
-        const elapsed = originalSeconds - remaining;
-    return elapsed; // in seconds
-}
-
-
 </script>
 
 </body>
