@@ -33,6 +33,10 @@ def home(request):
     for timer in Timer.objects.filter(user=request.user):
         actual_minutes += timer.duration / 60
 
+    actual_minutes = 0
+    for timer in Timer.objects.filter(user=request.user):
+        actual_minutes += timer.duration
+
     # Prepare data for graph: estimated time (minutes) per task
     task_names = []
     estimated_minutes = []
@@ -52,6 +56,11 @@ def home(request):
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     week_seconds = Timer.objects.filter(user=request.user, task__date__range=(week_start, week_end)).aggregate(Sum('duration'))['duration__sum'] or 0
+
+    actual_minutes_per_task = []
+    for task in tasks_with_estimate:
+        total = Timer.objects.filter(user=request.user, task=task).aggregate(Sum('duration'))['duration__sum'] or 0
+        actual_minutes_per_task.append(total)
 
     context = {
         "todays_tasks": todays_tasks,

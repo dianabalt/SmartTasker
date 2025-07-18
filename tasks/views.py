@@ -37,7 +37,6 @@ def daily_tasks(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
-
             hours = int(request.POST.get('estimated_hours', 0) or 0)
             minutes = int(request.POST.get('estimated_minutes', 0) or 0)
             seconds = int(request.POST.get('estimated_seconds', 0) or 0)
@@ -54,14 +53,12 @@ def daily_tasks(request):
                     start_time=timezone.now(),
                     is_running=True,
                 )
-
             return redirect('daily_tasks')
     else:
         form = TaskForm()
 
     edit_forms = {task.id: TaskForm(instance=task) for task in all_tasks}
     categories = Task.objects.filter(user=request.user).exclude(category='').values_list('category', flat=True).distinct()
-
     running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
     running = {
         t.task_id: {
@@ -126,7 +123,6 @@ def weekly_tasks(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
-
             hours = int(request.POST.get('estimated_hours', 0) or 0)
             minutes = int(request.POST.get('estimated_minutes', 0) or 0)
             seconds = int(request.POST.get('estimated_seconds', 0) or 0)
@@ -143,7 +139,6 @@ def weekly_tasks(request):
                     start_time=timezone.now(),
                     is_running=True,
                 )
-
             return redirect('weekly_tasks')
     else:
         form = TaskForm()
@@ -158,7 +153,6 @@ def weekly_tasks(request):
 
     edit_forms = {task.id: TaskForm(instance=task) for task in all_tasks}
     categories = Task.objects.filter(user=request.user).exclude(category='').values_list('category', flat=True).distinct()
-
     running_qs = Timer.objects.filter(user=request.user, task__in=all_tasks, is_running=True)
     running = {
         t.task_id: {
@@ -203,7 +197,6 @@ def toggle_task_complete(request, task_id):
             t.duration += t.elapsed_time
             t.elapsed_time = 0
         t.save()
-
     task.is_completed = not task.is_completed
     task.save()
     return redirect(request.META.get('HTTP_REFERER', 'daily_tasks'))
