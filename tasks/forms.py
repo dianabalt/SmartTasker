@@ -2,7 +2,6 @@ from django import forms
 from .models import Task
 
 class TaskForm(forms.ModelForm):
-    start_timer = forms.BooleanField(required=False, label="Start timer now")
 
     class Meta:
         model = Task
@@ -14,7 +13,6 @@ class TaskForm(forms.ModelForm):
             'category',
             'category_color',
             'estimated_time',
-            'start_timer',
         ]
         widgets = {
             'category_color': forms.TextInput(attrs={'type': 'color'}),
