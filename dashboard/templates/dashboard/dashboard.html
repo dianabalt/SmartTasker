@@ -189,7 +189,9 @@
         <a href="{% url 'dashboard' %}">Dashboard</a>
         <form method="POST" action="{% url 'logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit">Logout</button>
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
         </form>
     </div>
 </div>
