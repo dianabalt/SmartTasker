@@ -272,6 +272,42 @@
         </div>
     </form>
 
+    <div id="new-task-form" class="task-form-container" style="display:none;">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.title.label_tag }}
+            {{ form.title }}
+
+            {{ form.description.label_tag }}
+            {{ form.description }}
+
+            {{ form.deadline.label_tag }}
+            {{ form.deadline }}
+
+            {{ form.goal_date.label_tag }}
+            {{ form.goal_date }}
+
+            {{ form.category.label_tag }}
+            {{ form.category }}
+
+            <div class="form-group">
+                {{ form.category_color.label_tag }}
+                {{ form.category_color }}
+            </div>
+
+            <div class="form-group">
+                <div class="time-input-group">
+                    <label style="margin-right: 10px;">Estimated Duration:</label>
+                    <input type="number" name="estimated_hours" min="0" placeholder="Hours">
+                    <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
+                    <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
+                </div>
+            </div>
+
+            <button type="submit" class="save-btn">Save Task</button>
+            <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
+        </form>
+    </div>
 
 <h2 class="section-title">Today's Tasks</h2>
     {% for task in incomplete_tasks %}
@@ -362,42 +398,6 @@
         <p>No tasks completed today.</p>
     {% endfor %}
 
-    <div id="new-task-form" class="task-form-container" style="display:none;">
-        <form method="post">
-            {% csrf_token %}
-            {{ form.title.label_tag }}
-            {{ form.title }}
-
-            {{ form.description.label_tag }}
-            {{ form.description }}
-
-            {{ form.deadline.label_tag }}
-            {{ form.deadline }}
-
-            {{ form.goal_date.label_tag }}
-            {{ form.goal_date }}
-
-            {{ form.category.label_tag }}
-            {{ form.category }}
-
-            <div class="form-group">
-                {{ form.category_color.label_tag }}
-                {{ form.category_color }}
-            </div>
-
-            <div class="form-group">
-                <div class="time-input-group">
-                    <label style="margin-right: 10px;">Estimated Duration:</label>
-                    <input type="number" name="estimated_hours" min="0" placeholder="Hours">
-                    <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
-                    <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
-                </div>
-            </div>
-
-            <button type="submit" class="save-btn">Save Task</button>
-            <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
-        </form>
-    </div>
 
 <script>
     function toggleForm(id) {
