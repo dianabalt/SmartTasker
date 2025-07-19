@@ -109,16 +109,16 @@
     </div>
     <div class="stat">
         Time Spent Today
-        <p id="totalActualTime">0.00 minutes</p>
+        <p id="totalActualTime">{{ today_time_str }}</p>
     </div>
     <div class="stat">
         Time Spent This Week
-        <p id="totalActualTimeDuplicate">0.00 minutes</p>
+        <p id="totalActualTimeDuplicate">{{ week_time_str }}</p>
     </div>
 </div>
 
 <div class="section">
-    <h2>Task Time Comparison</h2>
+    <h2 style="text-align:center;">Task Time Comparison</h2>
     <canvas id="timeChart"></canvas>
 </div>
 
@@ -153,6 +153,13 @@
     const estimatedMinutes = JSON.parse('{{ estimated_minutes|escapejs }}');
     const taskIds = JSON.parse('{{ task_ids|escapejs }}');
 
+    function formatHMS(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}h ${m}m ${s}s`;
+    }
+
     const ctx = document.getElementById('timeChart').getContext('2d');
     const timeChart = new Chart(ctx, {
         type: 'bar',
@@ -160,12 +167,12 @@
             labels: taskNames,
             datasets: [
                 {
-                    label: 'Estimated Time (minutes)',
-                    data: estimatedMinutes,
+                    label: 'Estimated Time',
+                    data: estimatedMinutes.map(min => min * 60),
                     backgroundColor: 'rgba(54, 162, 235, 0.6)'
                 },
                 {
-                    label: 'Actual Time (minutes)',
+                    label: 'Actual Time',
                     data: [],
                     backgroundColor: 'rgba(255, 99, 132, 0.6)'
                 }
@@ -176,11 +183,23 @@
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'Minutes' }
+                    title: { display: true, text: 'Time' },
+                    ticks: {
+                        callback: function(value) {
+                            return formatHMS(value);
+                        }
+                    }
                 }
             },
             plugins: {
-                title: { display: true, text: 'Estimated vs Actual Time Per Task' }
+                title: { display: true, text: 'Estimated vs Actual Time Per Task' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${formatHMS(context.parsed.y)}`;
+                        }
+                    }
+                }
             }
         }
     });
@@ -190,31 +209,75 @@
         return stored ? JSON.parse(stored) : {};
     }
 
+    function tickTimers() {
+        const timers = loadTimers();
+        let updated = false;
+
+        Object.keys(timers).forEach(taskId => {
+            const timer = timers[taskId];
+            if (timer.running) {
+                if (timer.remainingSeconds > 0) {
+                    timer.remainingSeconds -= 1;
+                    updated = true;
+                } else {
+                    timer.overtimeSeconds = (timer.overtimeSeconds || 0) + 1;
+                    updated = true;
+                }
+            }
+        });
+
+        if (updated) {
+            localStorage.setItem('taskCountdownTimers', JSON.stringify(timers));
+        }
+    }
+
     function updateChartAndStats() {
         const timers = loadTimers();
 
-        const actualMinutesLive = taskIds.map((taskId, i) => {
+        // Calculate actual time as elapsed + overtime for each task (in seconds)
+        const actualSecondsLive = taskIds.map((taskId, i) => {
             const timer = timers[taskId];
             if (!timer) return 0;
 
             const estimatedSec = (estimatedMinutes[i] || 0) * 60;
             const remainingSec = timer.remainingSeconds ?? 0;
             const elapsedSec = estimatedSec - remainingSec;
+            const overtimeSec = timer.overtimeSeconds ?? 0;
+            const totalSec = Math.max(elapsedSec, 0) + overtimeSec;
 
-            return elapsedSec > 0 ? +(elapsedSec / 60).toFixed(2) : 0;
+            return Math.floor(totalSec);
         });
 
-        timeChart.data.datasets[1].data = actualMinutesLive;
+        timeChart.data.datasets[0].data = estimatedMinutes.map(min => Math.floor(min * 60));
+        timeChart.data.datasets[1].data = actualSecondsLive;
         timeChart.update();
 
-        const totalActualMinutes = actualMinutesLive.reduce((sum, val) => sum + val, 0);
-        const formatted = totalActualMinutes.toFixed(2) + " minutes";
-        document.getElementById('totalActualTime').textContent = formatted;
-        document.getElementById('totalActualTimeDuplicate').textContent = formatted;
+        // Total estimated time (all tasks)
+        const totalEstimatedSeconds = estimatedMinutes.reduce((sum, min) => sum + min * 60, 0);
+        document.querySelectorAll('.stat')[2].querySelector('p').textContent = formatHMS(totalEstimatedSeconds);
+
     }
 
-    setInterval(updateChartAndStats, 1000);
-    window.addEventListener('load', updateChartAndStats);
+    // Poll backend for union interval stats every second
+    function refreshDashboardTime() {
+        fetch('/dashboard/refresh_time/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalActualTime').textContent = data.today_time;
+                document.getElementById('totalActualTimeDuplicate').textContent = data.week_time;
+            });
+    }
+
+    setInterval(() => {
+        tickTimers();
+        updateChartAndStats();
+    }, 1000);
+
+    setInterval(refreshDashboardTime, 1000); // signals backend every second for live stats
+    window.addEventListener('load', () => {
+        updateChartAndStats();
+        refreshDashboardTime();
+    });
 </script>
 
 </body>

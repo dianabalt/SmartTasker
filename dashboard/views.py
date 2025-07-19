@@ -21,6 +21,34 @@ def get_total_elapsed_seconds(user, task=None):
     return total_seconds
 
 
+def sum_union_intervals(timers):
+    from django.utils import timezone
+    intervals = []
+    now = timezone.now()
+    for timer in timers:
+        if timer.start_time:
+            # If running, add current interval up to now
+            if getattr(timer, 'is_running', False):
+                end = now
+                elapsed = (end - timer.start_time).total_seconds()
+                intervals.append((timer.start_time, end))
+            elif timer.elapsed_time:
+                end = timer.start_time + timedelta(seconds=timer.elapsed_time)
+                intervals.append((timer.start_time, end))
+    if not intervals:
+        return 0
+
+    intervals.sort()
+    merged = []
+    for start, end in intervals:
+        if not merged or start > merged[-1][1]:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    total = sum((end - start).total_seconds() for start, end in merged)
+    return int(total)
+
+
 @login_required
 def home(request):
     today = date.today()
@@ -58,11 +86,11 @@ def home(request):
 
     # Total seconds for today (all timers started/created today)
     today_timers = Timer.objects.filter(user=request.user, created_at__date=today)
-    today_seconds = sum(timer.get_elapsed_time() for timer in today_timers)
+    today_seconds = sum_union_intervals(today_timers)
 
     # Total seconds for week (all timers started/created this week)
     week_timers = Timer.objects.filter(user=request.user, created_at__date__range=(week_start, week_end))
-    week_seconds = sum(timer.get_elapsed_time() for timer in week_timers)
+    week_seconds = sum_union_intervals(week_timers)
 
     def seconds_to_hms(seconds):
         h = seconds // 3600
@@ -94,10 +122,10 @@ def refresh_time(request):
     week_end = week_start + timedelta(days=6)
 
     today_timers = Timer.objects.filter(user=request.user, created_at__date=today)
-    today_seconds = sum(timer.get_elapsed_time() for timer in today_timers)
+    today_seconds = sum_union_intervals(today_timers)
 
     week_timers = Timer.objects.filter(user=request.user, created_at__date__range=(week_start, week_end))
-    week_seconds = sum(timer.get_elapsed_time() for timer in week_timers)
+    week_seconds = sum_union_intervals(week_timers)
 
     def seconds_to_hms(seconds):
         h = seconds // 3600
