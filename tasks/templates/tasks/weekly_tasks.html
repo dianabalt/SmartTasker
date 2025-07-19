@@ -346,12 +346,6 @@
                         {% if task.category %} | Category: {{ task.category }}{% endif %}
                         {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
                         {% with info=running_timers|dict_get:task.id %}
-                            {% if info %}
-                                <div class="timer-display">
-                                    <span id="timer-{{ task.id }}" class="time-remain"></span>
-                                    <span id="overtime-{{ task.id }}" class="overtime" style="display:none;"></span>
-                                </div>
-                            {% endif %}
                         {% endwith %}
                         {% if task.is_completed %} | Spent: {{ spent_times|dict_get:task.id|seconds_to_hms }}{% endif %}
                     </div>
