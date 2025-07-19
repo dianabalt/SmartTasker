@@ -495,137 +495,166 @@
 </div>
 
 <script>
+    // Toggle visibility for forms
     function toggleForm(id) {
-        const form = document.getElementById(id);
-        if (form.style.display === "none" || form.style.display === "") {
-            form.style.display = "block";
-        } else {
-            form.style.display = "none";
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
         }
     }
 
-    const runningTimers = JSON.parse('{{ running_timers_json|escapejs }}');
     const taskTitles = JSON.parse('{{ task_titles_json|escapejs }}');
-    function formatTime(sec) {
-        const h = String(Math.floor(sec / 3600)).padStart(2, '0');
-        const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
-        const s = String(sec % 60).padStart(2, '0');
+
+    // Format seconds as hh:mm:ss
+    function formatTime(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
         return `${h}:${m}:${s}`;
     }
 
-    function startCountdown(remEl, data) {
-        const overEl = document.getElementById('overtime-' + data.id);
-        const start = new Date(data.start_time);
-        const est = data.estimated || 0;
-        const initial = data.elapsed || 0;
-        function update() {
-            const now = new Date();
-            const elapsed = initial + Math.floor((now - start) / 1000);
-            const remaining = est - elapsed;
-            if (remaining <= 0) {
-                if (!remEl.dataset.notified) {
-                    const name = data.title || ('Task ' + data.id);
-                    alert(`Time's up for ${name}! Click OK to continue working and enter overtime.`);
-                    remEl.dataset.notified = 'true';
-                    remEl.classList.add('expired');
-                    remEl.textContent = '00:00:00';
-                    if (overEl) overEl.style.display = 'inline';
-                }
-                if (overEl) overEl.textContent = 'Overtime: ' + formatTime(-remaining);
-            } else {
-                remEl.textContent = formatTime(remaining);
-            }
-        }
-        update();
-        setInterval(update, 1000);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        for (const [id, data] of Object.entries(runningTimers)) {
-            const el = document.getElementById('timer-' + id);
-            if (el) startCountdown(el, { ...data, id: id });
-        }
-    });
-
-    // Local countdown timers for Start/Pause/Stop buttons
+    // Object to hold timers state: taskId -> {remainingSeconds, intervalId, running}
     const timers = {};
 
+    // Format seconds to HH:MM:SS string
+    function formatTime(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    // Load timers state from localStorage
     function loadTimers() {
-        const stored = localStorage.getItem('weeklyCountdowns');
-        return stored ? JSON.parse(stored) : {};
-    }
-
-    function saveTimers() {
-        const state = {};
-        for (const id in timers) {
-            state[id] = { remainingSeconds: timers[id].remainingSeconds, notified: timers[id].notified };
-        }
-        localStorage.setItem('weeklyCountdowns', JSON.stringify(state));
-    }
-
-    function updateDisplay(id) {
-        const remEl = document.getElementById('timer-display-' + id) || document.getElementById('timer-' + id);
-        const overEl = document.getElementById('overtime-display-' + id) || document.getElementById('overtime-' + id);
-        if (!remEl) return;
-        const remaining = timers[id]?.remainingSeconds ?? 0;
-        if (remaining >= 0) {
-            remEl.textContent = formatTime(remaining);
-            remEl.classList.remove('expired');
-            if (overEl) overEl.style.display = 'none';
-        } else {
-            if (!timers[id].notified) {
-                const name = taskTitles[id] || ('Task ' + id);
-                alert(`Time's up for ${name}! Click OK to continue working and enter overtime.`);
-                timers[id].notified = true;
-                remEl.classList.add('expired');
-                remEl.textContent = '00:00:00';
-                if (overEl) overEl.style.display = 'block';
+        const saved = localStorage.getItem('taskCountdownTimers');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            for (const taskId in parsed) {
+                timers[taskId] = {
+                    remainingSeconds: parsed[taskId].remainingSeconds,
+                    intervalId: null,
+                    running: parsed[taskId].running
+                };
             }
-            if (overEl) overEl.textContent = 'Overtime: ' + formatTime(-remaining);
         }
     }
 
-    function startTimer(id, est) {
-        if (timers[id]?.intervalId) return;
+    // Save timers state to localStorage
+    function saveTimers() {
+        const toSave = {};
+        for (const taskId in timers) {
+            toSave[taskId] = {
+                remainingSeconds: timers[taskId].remainingSeconds,
+                running: timers[taskId].running
+            };
+        }
+        localStorage.setItem('taskCountdownTimers', JSON.stringify(toSave));
+    }
 
-        if (!timers[id]) {
-            timers[id] = { remainingSeconds: est, intervalId: null, notified: false };
+    // Update timer display on the page for a task
+    function updateDisplay(taskId) {
+        const display = document.getElementById(`timer-display-${taskId}`);
+        if (!display) return;
+
+        const remaining = timers[taskId]?.remainingSeconds ?? 0;
+
+        if (remaining > 0) {
+            display.textContent = `Time Remaining: ${formatTime(remaining)}`;
+            display.classList.remove('expired');
+        } else {
+            display.textContent = "Time Remaining: 00:00:00";
+            display.classList.add('expired');
+            pauseTimer(taskId);  // Pause automatically when time reaches zero
+        }
+    }
+
+    // Start or resume countdown timer for taskId, estSeconds is the original estimated seconds
+    function startTimer(taskId, estSeconds) {
+        if (!timers[taskId]) {
+            timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+        }
+        if (timers[taskId].running) return; // Already running
+
+        // Reset if timer was at zero
+        if (timers[taskId].remainingSeconds <= 0) {
+            timers[taskId].remainingSeconds = estSeconds;
         }
 
-        updateDisplay(id);
-        timers[id].intervalId = setInterval(() => {
-            timers[id].remainingSeconds--;
-            updateDisplay(id);
+        timers[taskId].running = true;
+        timers[taskId].intervalId = setInterval(() => {
+            timers[taskId].remainingSeconds--;
+
+            if (timers[taskId].remainingSeconds <= 0) {
+                timers[taskId].remainingSeconds = 0;
+                updateDisplay(taskId);
+                pauseTimer(taskId);
+                alert(`Time's up for task ${taskId}!`);
+                return;
+            }
+
+            updateDisplay(taskId);
             saveTimers();
         }, 1000);
+
+        updateDisplay(taskId);
         saveTimers();
     }
 
-    function pauseTimer(id) {
-        if (timers[id]?.intervalId) {
-            clearInterval(timers[id].intervalId);
-            timers[id].intervalId = null;
+    // Pause the countdown timer
+    function pauseTimer(taskId) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
+            timers[taskId].intervalId = null;
+            timers[taskId].running = false;
             saveTimers();
         }
     }
 
-    function stopTimer(id, est) {
-        if (timers[id]?.intervalId) {
-            clearInterval(timers[id].intervalId);
+    // Stop timer and reset to original estimated time
+    function stopTimer(taskId, estSeconds) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
         }
-        timers[id] = { remainingSeconds: est, intervalId: null, notified: false };
-        const overEl = document.getElementById('overtime-display-' + id) || document.getElementById('overtime-' + id);
-        if (overEl) overEl.style.display = 'none';
-        updateDisplay(id);
+        timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+        updateDisplay(taskId);
         saveTimers();
     }
 
+    // On page load: initialize timers and restart running timers
     window.addEventListener('load', () => {
-        const stored = loadTimers();
-        for (const id in stored) {
-            timers[id] = { remainingSeconds: stored[id].remainingSeconds, intervalId: null, notified: stored[id].notified };
-            updateDisplay(id);
-        }
+        loadTimers();
+
+        // Find all timer displays
+        document.querySelectorAll("[id^='timer-display-']").forEach(el => {
+            const taskId = el.id.replace('timer-display-', '');
+
+            // Initialize timers entry if missing
+            if (!timers[taskId]) {
+                // Try to read estSeconds from data attribute, fallback 0
+                const estSeconds = Number(el.dataset.estSeconds) || 0;
+                timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+            }
+
+            updateDisplay(taskId);
+
+            // Restart intervals for running timers
+            if (timers[taskId].running && !timers[taskId].intervalId) {
+                timers[taskId].intervalId = setInterval(() => {
+                    timers[taskId].remainingSeconds--;
+
+                    if (timers[taskId].remainingSeconds <= 0) {
+                        timers[taskId].remainingSeconds = 0;
+                        updateDisplay(taskId);
+                        pauseTimer(taskId);
+                        alert(`Time's up for task ${taskId}!`);
+                        return;
+                    }
+
+                    updateDisplay(taskId);
+                    saveTimers();
+                }, 1000);
+            }
+        });
     });
 </script>
 
