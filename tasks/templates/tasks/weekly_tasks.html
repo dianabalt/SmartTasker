@@ -513,7 +513,7 @@
         return `${h}:${m}:${s}`;
     }
 
-    // Object to hold timers state: taskId -> {remainingSeconds, intervalId, running}
+    // Object to hold timers state: taskId -> {remainingSeconds, overtimeSeconds, intervalId, running}
     const timers = {};
 
     // Format seconds to HH:MM:SS string
@@ -532,6 +532,7 @@
             for (const taskId in parsed) {
                 timers[taskId] = {
                     remainingSeconds: parsed[taskId].remainingSeconds,
+                    overtimeSeconds: parsed[taskId].overtimeSeconds || 0,
                     intervalId: null,
                     running: parsed[taskId].running
                 };
@@ -545,6 +546,7 @@
         for (const taskId in timers) {
             toSave[taskId] = {
                 remainingSeconds: timers[taskId].remainingSeconds,
+                overtimeSeconds: timers[taskId].overtimeSeconds || 0,
                 running: timers[taskId].running
             };
         }
@@ -554,42 +556,47 @@
     // Update timer display on the page for a task
     function updateDisplay(taskId) {
         const display = document.getElementById(`timer-display-${taskId}`);
-        if (!display) return;
+        const overtimeEl = document.getElementById(`overtime-display-${taskId}`);
+        if (!display || !overtimeEl) return;
 
-        const remaining = timers[taskId]?.remainingSeconds ?? 0;
+        const timer = timers[taskId] || {};
+        const remaining = timer.remainingSeconds || 0;
+        const overtime = timer.overtimeSeconds || 0;
 
         if (remaining > 0) {
             display.textContent = `Time Remaining: ${formatTime(remaining)}`;
             display.classList.remove('expired');
+            overtimeEl.style.display = 'none';
         } else {
             display.textContent = "Time Remaining: 00:00:00";
             display.classList.add('expired');
-            pauseTimer(taskId);  // Pause automatically when time reaches zero
+            overtimeEl.style.display = 'block';
+            overtimeEl.textContent = `Overtime: ${formatTime(overtime)}`;
         }
     }
 
     // Start or resume countdown timer for taskId, estSeconds is the original estimated seconds
     function startTimer(taskId, estSeconds) {
         if (!timers[taskId]) {
-            timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+            timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
         }
         if (timers[taskId].running) return; // Already running
 
         // Reset if timer was at zero
         if (timers[taskId].remainingSeconds <= 0) {
             timers[taskId].remainingSeconds = estSeconds;
+            timers[taskId].overtimeSeconds = 0;
         }
 
         timers[taskId].running = true;
         timers[taskId].intervalId = setInterval(() => {
-            timers[taskId].remainingSeconds--;
-
-            if (timers[taskId].remainingSeconds <= 0) {
-                timers[taskId].remainingSeconds = 0;
-                updateDisplay(taskId);
-                pauseTimer(taskId);
-                alert(`Time's up for task ${taskId}!`);
-                return;
+            if (timers[taskId].remainingSeconds > 0) {
+                timers[taskId].remainingSeconds--;
+                if (timers[taskId].remainingSeconds === 0) {
+                    alert(`Time's up for task ${taskId}!`);
+                }
+            } else {
+                timers[taskId].overtimeSeconds++;
             }
 
             updateDisplay(taskId);
@@ -615,7 +622,7 @@
         if (timers[taskId]?.intervalId) {
             clearInterval(timers[taskId].intervalId);
         }
-        timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+        timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
         updateDisplay(taskId);
         saveTimers();
     }
@@ -632,7 +639,7 @@
             if (!timers[taskId]) {
                 // Try to read estSeconds from data attribute, fallback 0
                 const estSeconds = Number(el.dataset.estSeconds) || 0;
-                timers[taskId] = { remainingSeconds: estSeconds, intervalId: null, running: false };
+                timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
             }
 
             updateDisplay(taskId);
@@ -640,14 +647,13 @@
             // Restart intervals for running timers
             if (timers[taskId].running && !timers[taskId].intervalId) {
                 timers[taskId].intervalId = setInterval(() => {
-                    timers[taskId].remainingSeconds--;
-
-                    if (timers[taskId].remainingSeconds <= 0) {
-                        timers[taskId].remainingSeconds = 0;
-                        updateDisplay(taskId);
-                        pauseTimer(taskId);
-                        alert(`Time's up for task ${taskId}!`);
-                        return;
+                    if (timers[taskId].remainingSeconds > 0) {
+                        timers[taskId].remainingSeconds--;
+                        if (timers[taskId].remainingSeconds === 0) {
+                            alert(`Time's up for task ${taskId}!`);
+                        }
+                    } else {
+                        timers[taskId].overtimeSeconds++;
                     }
 
                     updateDisplay(taskId);
