@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Register - SmartTasker</title>
-    <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
+    <link rel="icon" type="image/png" href="{% static 'images/rsz_stopwatch.png' %}">
     <style>
         body {
             margin: 0;
@@ -43,60 +43,98 @@
 
         .register-container {
             background: white;
-            color: black;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 400px;
+            color: #1c2448;
+            border-radius: 20px;
+            padding: 40px 36px 32px 36px;
+            max-width: 410px;
             width: 100%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-top: 80px;
+            box-shadow: 0 6px 32px 0 rgba(44, 50, 80, 0.15), 0 1.5px 4px 0 rgba(44,50,80,0.05);
+            margin-top: 96px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         h2 {
             text-align: center;
-            margin-bottom: 20px;
-            color: #2e376e;
+            margin-bottom: 28px;
+            color: #293265;
+            font-size: 2.1rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
 
-        form p {
-            margin-bottom: 15px;
+        .input-group {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            font-weight: 700;
+            color: #22264d;
+            font-size: 1.04rem;
         }
 
         input[type="text"], input[type="password"], input[type="email"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 12px 12px 12px 12px;
+            border: 1.5px solid #d7dbef;
+            border-radius: 10px;
             box-sizing: border-box;
+            font-size: 1rem;
+            background: #f7f9fd;
+            transition: border 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
+            border: 1.5px solid #00bfff;
+            box-shadow: 0 0 0 2px #b1e6ff8f;
+            background: #fff;
+        }
+
+        .input-help {
+            font-size: 0.86rem;
+            color: #7b88a8;
+            margin-top: 2px;
+            margin-bottom: 0;
+            line-height: 1.3;
+        }
+
+        .error {
+            color: #e03131;
+            font-size: 0.92rem;
+            margin-top: 3px;
+            margin-bottom: 0;
+            font-weight: 600;
         }
 
         button {
-            background-color: #00BFFF;
+            background: linear-gradient(90deg, #00BFFF 40%, #2883d7 100%);
             color: white;
-            padding: 12px 20px;
+            padding: 13px 0;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            margin-top: 10px;
+            box-shadow: 0 2px 8px 0 #0bbdff3c;
+            margin-top: 20px;
+            transition: background 0.17s, box-shadow 0.15s;
+            letter-spacing: 0.01em;
         }
 
-        button:hover {
-            background-color: #009ACD;
+        button:hover, button:focus {
+            background: linear-gradient(90deg, #009acd 30%, #1874b7 100%);
+            box-shadow: 0 4px 12px 0 #008ac088;
         }
 
         .login-link {
             text-align: center;
-            margin-top: 20px;
-            color: #666;
+            margin-top: 23px;
+            color: #7a7fa3;
+            font-size: 1rem;
         }
 
         .login-link a {
@@ -120,9 +158,46 @@
 
     <div class="register-container">
         <h2>Create an Account</h2>
-        <form method="POST">
+        <form method="POST" autocomplete="off">
             {% csrf_token %}
-            {{ form.as_p }}
+            <div class="input-group">
+                <label for="id_username">Username</label>
+                <input type="text" name="username" id="id_username" maxlength="150" required value="{{ form.username.value|default:'' }}">
+                <span class="input-help">150 chars max. Letters, digits, @/./+/-/_ only.</span>
+                {% if form.username.errors %}
+                    <span class="error">{{ form.username.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="input-group">
+                <label for="id_email">Email</label>
+                <input type="email" name="email" id="id_email" required value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}
+                    <span class="error">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="input-group">
+                <label for="id_password1">Password</label>
+                <input type="password" name="password1" id="id_password1" required>
+                <span class="input-help">
+                    Must be 8+ chars. Not too similar to personal info.<br>
+                    Not common or entirely numeric.
+                </span>
+                {% if form.password1.errors %}
+                    <span class="error">{{ form.password1.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <div class="input-group">
+                <label for="id_password2">Confirm Password</label>
+                <input type="password" name="password2" id="id_password2" required>
+                <span class="input-help">Repeat password for verification.</span>
+                {% if form.password2.errors %}
+                    <span class="error">{{ form.password2.errors.0 }}</span>
+                {% endif %}
+            </div>
+
             <button type="submit">Register</button>
         </form>
         <div class="login-link">
