@@ -34,7 +34,7 @@
 2. Create and activate a virtual environment
    ```bash
    python3 -m venv venv
-   source venv/bin/activate
+   source venv/bin/activate or venv/scripts/activate on windows
    ```
 3. Install dependencies
    ```bash
