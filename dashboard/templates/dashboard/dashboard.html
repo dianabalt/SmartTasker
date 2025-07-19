@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - SmartTasker</title>
+    <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
@@ -109,19 +110,19 @@
     </div>
     <div class="stat">
         Total Estimated Time
-        <p>{{ total_estimated_time }}</p>
+        <p>{{ total_estimated_minutes|floatformat:2 }} minutes</p>
     </div>
     <div class="stat">
         Time Spent Today
-        <p>{{ today_time_str }}</p>
+        <p id="timeSpentToday">0h 0m 0s</p>
     </div>
     <div class="stat">
         Time Spent This Week
-        <p>{{ week_time_str }}</p>
+        <p id="timeSpentWeek">0h 0m 0s</p>
     </div>
     <div class="stat">
-        Total Remaining Time (Live)
-        <p id="liveElapsedTime">0 minutes</p>
+        Time Spent (Live)
+        <p id="liveElapsedTime">0.00 minutes</p>
     </div>
 </div>
 
@@ -157,40 +158,12 @@
 </div>
 
 <script>
-    // From Django context variables
+    // Parse Django context data
     const taskNames = JSON.parse('{{ task_names|escapejs }}');
     const estimatedMinutes = JSON.parse('{{ estimated_minutes|escapejs }}');
     const taskIds = JSON.parse('{{ task_ids|escapejs }}');
 
-    // Load stored timers from localStorage
-    let storedTimers = {};
-    function loadTimers() {
-        const stored = localStorage.getItem('countdownTimers');
-        storedTimers = stored ? JSON.parse(stored) : {};
-    }
-    loadTimers();
-
-    // Calculate elapsed time for each task based on countdown timers
-    let actualMinutesLive = taskIds.map((taskId, idx) => {
-        const estMin = estimatedMinutes[idx];
-        const estSeconds = estMin * 60;
-        
-        if (storedTimers[taskId]) {
-            const remainingSeconds = storedTimers[taskId].remainingSeconds || 0;
-            
-            // If timer has gone negative (overtime), actual time = estimated + overtime
-            if (remainingSeconds <= 0) {
-                const overtimeSeconds = Math.abs(remainingSeconds);
-                return (estSeconds + overtimeSeconds) / 60;
-            } else {
-                // Normal case: actual time = estimated - remaining
-                const elapsedSeconds = estSeconds - remainingSeconds;
-                return elapsedSeconds / 60;
-            }
-        }
-        return 0;
-    });
-
+    // Chart.js setup
     const ctx = document.getElementById('timeChart').getContext('2d');
     const timeChart = new Chart(ctx, {
         type: 'bar',
@@ -204,7 +177,7 @@
                 },
                 {
                     label: 'Actual Time (minutes)',
-                    data: actualMinutesLive,
+                    data: [],  // will fill in updateChart()
                     backgroundColor: 'rgba(255, 99, 132, 0.6)'
                 }
             ]
@@ -229,52 +202,110 @@
         }
     });
 
-    // Update chart data & live total remaining time display every second
+    // Helper: Convert seconds to "Xh Ym Zs" format
+    function secondsToHMS(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}h ${m}m ${s}s`;
+    }
+
+    // Load timers from localStorage
+    function loadTimers() {
+        const stored = localStorage.getItem('taskCountdownTimers');
+        return stored ? JSON.parse(stored) : {};
+    }
+
+    // Map estimatedMinutes by taskId for easy access
+    const estimatedMap = {};
+    taskIds.forEach((id, i) => {
+        estimatedMap[id] = estimatedMinutes[i];
+    });
+
+    // Update chart and live elapsed time display
     function updateChart() {
-        loadTimers();
-        
-        // Calculate elapsed time for each task
-        actualMinutesLive = taskIds.map((taskId, idx) => {
-            const estMin = estimatedMinutes[idx];
-            const estSeconds = estMin * 60;
-            
-            if (storedTimers[taskId]) {
-                const remainingSeconds = storedTimers[taskId].remainingSeconds || 0;
-                
-                // If timer has gone negative (overtime), actual time = estimated + overtime
-                if (remainingSeconds <= 0) {
-                    const overtimeSeconds = Math.abs(remainingSeconds);
-                    return +((estSeconds + overtimeSeconds) / 60).toFixed(2);
-                } else {
-                    // Normal case: actual time = estimated - remaining
-                    const elapsedSeconds = estSeconds - remainingSeconds;
-                    return +(elapsedSeconds / 60).toFixed(2);
-                }
+        const timers = loadTimers();
+
+        // Actual elapsed time per task in minutes
+        const actualMinutesLive = taskIds.map((taskId) => {
+            if (timers[taskId]) {
+                const remainingSeconds = timers[taskId].remainingSeconds || 0;
+                const estimatedSec = (estimatedMap[taskId] || 0) * 60;
+                const elapsedSec = estimatedSec - remainingSeconds;
+                return elapsedSec > 0 ? +(elapsedSec / 60).toFixed(2) : 0;
             }
             return 0;
         });
 
-        // Update chart
         timeChart.data.datasets[1].data = actualMinutesLive;
         timeChart.update();
 
-        // Calculate total remaining time from all active timers
-        let totalRemainingMinutes = 0;
-        for (const [taskId, timer] of Object.entries(storedTimers)) {
-            if (timer.remainingSeconds > 0) {
-                totalRemainingMinutes += timer.remainingSeconds / 60;
-            }
-        }
-        
-        // Update live total remaining time display
-        document.getElementById('liveElapsedTime').textContent = totalRemainingMinutes.toFixed(1) + " minutes";
+        // Total live elapsed time (sum all tasks)
+        const totalLiveElapsed = actualMinutesLive.reduce((a,b) => a + b, 0);
+        document.getElementById('liveElapsedTime').textContent = totalLiveElapsed.toFixed(2) + " minutes";
     }
 
-    // Initial update
-    updateChart();
-    
-    // Update every second
-    setInterval(updateChart, 1000);
+    function updateTimes() {
+        const timers = loadTimers();
+
+        let totalElapsedSecondsToday = 0;
+        let totalElapsedSecondsWeek = 0;
+        const now = new Date();
+
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const day = now.getDay(); // Sunday = 0
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day).getTime();
+
+        for (const taskId in timers) {
+            // Skip timers not in the current tasks list
+            if (!taskIds.includes(taskId)) continue;
+
+            const timerData = timers[taskId];
+            if (!timerData) continue;
+
+            // Get accumulated seconds or elapsedTime field (fallback)
+            const accumulated = timerData.accumulatedSeconds ?? timerData.elapsedTime ?? 0;
+
+            const isRunning = timerData.running ?? timerData.isRunning ?? false;
+            const startTimeRaw = timerData.startTime ?? timerData.start_time ?? null;
+
+            let runningElapsed = 0;
+
+            if (isRunning && startTimeRaw) {
+                const startTime = new Date(startTimeRaw).getTime();
+                runningElapsed = Math.max(0, (now.getTime() - startTime) / 1000);
+            }
+
+            const totalElapsed = accumulated + runningElapsed;
+
+            if (startTimeRaw) {
+                const startTime = new Date(startTimeRaw).getTime();
+
+                if (startTime >= startOfToday) {
+                    totalElapsedSecondsToday += totalElapsed;
+                }
+                if (startTime >= startOfWeek) {
+                    totalElapsedSecondsWeek += totalElapsed;
+                }
+            }
+            // If no startTime, skip to avoid counting unknown timers
+        }
+
+        document.getElementById('timeSpentToday').textContent = secondsToHMS(totalElapsedSecondsToday);
+        document.getElementById('timeSpentWeek').textContent = secondsToHMS(totalElapsedSecondsWeek);
+    }
+
+    // Run updates every second
+    setInterval(() => {
+        updateChart();
+        updateTimes();
+    }, 1000);
+
+    // Initial update on page load
+    window.addEventListener('load', () => {
+        updateChart();
+        updateTimes();
+    });
 </script>
 
 </body>
