@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartTasker Home</title>
+    <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #2e376e;
+            color: white;
+        }
+
+        .navbar {
+            background-color: #1c2448;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .app-name {
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .slogan {
+            font-size: 1.5em;
+            margin-bottom: 50px;
+            color: #a0cfff;
+        }
+
+        .option-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .option {
+            background-color: #00BFFF;
+            color: white;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 15px;
+            text-decoration: none;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .option:hover {
+            transform: scale(1.05);
+            background-color: #009ACD;
+        }
+    </style>
+</head>
+<body>
+   <div class="navbar">
+    <div><a href="{% url 'home' %}">SmartTasker</a></div>
+    <div>
+        <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
+        <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+        Logout
+    </button>
+</form>
+
+    </div>
+</div>
+
+    <div class="container">
+        <div class="app-name">SmartTasker</div>
+        <div class="slogan">Stay focused. Stay organized. Every day, every week.</div>
+
+        <div class="option-boxes">
+            <a class="option" href="{% url 'daily_tasks' %}">Daily To-Do List</a>
+            <a class="option" href="{% url 'weekly_tasks' %}">Weekly To-Do List</a>
+        </div>
+    </div>
+</body>
+</html>

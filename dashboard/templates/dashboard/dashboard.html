@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - SmartTasker</title>
+    <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        background-color: #2e376e;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      .navbar {
+        background-color: #1c2448;
+        padding: 12px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        margin-left: 20px;
+        font-weight: bold;
+      }
+      .navbar a:hover {
+        text-decoration: underline;
+      }
+      .stats-container {
+        display: flex;
+        gap: 40px;
+        padding: 30px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .stat {
+        background: white;
+        color: black;
+        border-radius: 12px;
+        padding: 20px 30px;
+        min-width: 180px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        font-weight: bold;
+      }
+      .stat p {
+        font-size: 2rem;
+        margin: 10px 0 0;
+      }
+      .section {
+        background: rgba(255, 255, 255, 0.9);
+        margin: 30px auto;
+        max-width: 900px;
+        border-radius: 12px;
+        padding: 20px 30px;
+        color: black;
+      }
+      .section h2 {
+        margin-top: 0;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      #timeChart {
+        max-width: 100%;
+        height: 300px;
+      }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div><a href="{% url 'home' %}">SmartTasker</a></div>
+    <div>
+        <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
+        <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
+        </form>
+    </div>
+</div>
+
+<h1 style="text-align:center; margin-top: 30px;">Dashboard</h1>
+
+<div class="stats-container">
+    <div class="stat">
+        Total Tasks
+        <p>{{ total_tasks }}</p>
+    </div>
+    <div class="stat">
+        Completed Tasks
+        <p>{{ completed_tasks }}</p>
+    </div>
+    <div class="stat">
+        Total Estimated Time
+        <p>{{ total_estimated_minutes|floatformat:2 }} minutes</p>
+    </div>
+    <div class="stat">
+        Time Spent Today
+        <p id="totalActualTime">0.00 minutes</p>
+    </div>
+    <div class="stat">
+        Time Spent This Week
+        <p id="totalActualTimeDuplicate">0.00 minutes</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Task Time Comparison</h2>
+    <canvas id="timeChart"></canvas>
+</div>
+
+<div class="section">
+    <h2>Today's Tasks</h2>
+    {% if todays_tasks %}
+        <ul>
+            {% for task in todays_tasks %}
+                <li><strong>{{ task.title }}</strong> — Due: {{ task.deadline|date:"M d, Y" }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tasks due today.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Upcoming Tasks</h2>
+    {% if upcoming_tasks %}
+        <ul>
+            {% for task in upcoming_tasks %}
+                <li><strong>{{ task.title }}</strong> — Due: {{ task.deadline|date:"M d, Y" }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No upcoming tasks.</p>
+    {% endif %}
+</div>
+
+<script>
+    const taskNames = JSON.parse('{{ task_names|escapejs }}');
+    const estimatedMinutes = JSON.parse('{{ estimated_minutes|escapejs }}');
+    const taskIds = JSON.parse('{{ task_ids|escapejs }}');
+
+    const ctx = document.getElementById('timeChart').getContext('2d');
+    const timeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: taskNames,
+            datasets: [
+                {
+                    label: 'Estimated Time (minutes)',
+                    data: estimatedMinutes,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                },
+                {
+                    label: 'Actual Time (minutes)',
+                    data: [],
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Minutes' }
+                }
+            },
+            plugins: {
+                title: { display: true, text: 'Estimated vs Actual Time Per Task' }
+            }
+        }
+    });
+
+    function loadTimers() {
+        const stored = localStorage.getItem('taskCountdownTimers');
+        return stored ? JSON.parse(stored) : {};
+    }
+
+    function updateChartAndStats() {
+        const timers = loadTimers();
+
+        const actualMinutesLive = taskIds.map((taskId, i) => {
+            const timer = timers[taskId];
+            if (!timer) return 0;
+
+            const estimatedSec = (estimatedMinutes[i] || 0) * 60;
+            const remainingSec = timer.remainingSeconds ?? 0;
+            const elapsedSec = estimatedSec - remainingSec;
+
+            return elapsedSec > 0 ? +(elapsedSec / 60).toFixed(2) : 0;
+        });
+
+        timeChart.data.datasets[1].data = actualMinutesLive;
+        timeChart.update();
+
+        const totalActualMinutes = actualMinutesLive.reduce((sum, val) => sum + val, 0);
+        const formatted = totalActualMinutes.toFixed(2) + " minutes";
+        document.getElementById('totalActualTime').textContent = formatted;
+        document.getElementById('totalActualTimeDuplicate').textContent = formatted;
+    }
+
+    setInterval(updateChartAndStats, 1000);
+    window.addEventListener('load', updateChartAndStats);
+</script>
+
+</body>
+</html>

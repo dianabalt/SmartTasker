@@ -1,0 +1,662 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>This Week's Tasks</title>
+    <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
+    <style>
+        body {
+            background-color: #2e376e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .add-task-btn, .delete-btn, .save-btn, .edit-btn {
+            background-color: #00BFFF;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+        }
+
+        .task-form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            color: black;
+            margin-bottom: 30px;
+        }
+
+        .task-form-container input,
+        .task-form-container textarea,
+        .task-form-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .task-form-container input[type="color"] {
+            width: 60px;
+            padding: 0;
+        }
+
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .time-input-group input {
+            width: 100px;
+        }
+
+        .task-form-container button {
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .task-card {
+            background-color: white;
+            color: #000;
+            border-radius: 20px;
+            border-style: groove;
+            border-color: #2b04d6;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-card.completed {
+            background-color: #f1f1f1;
+            color: #999;
+            opacity: 0.6;
+        }
+
+        .task-card.completed .task-title,
+        .task-card.completed .task-desc,
+        .task-card.completed .date-info {
+            text-decoration: line-through;
+        }
+
+        .task-details {
+            flex-grow: 1;
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .task-desc {
+            font-size: 14px;
+        }
+
+        .date-info {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .day-header {
+            margin-top: 30px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        .check-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .check-circle.completed {
+            background-color: #32CD32;
+            border-color: darkgreen;
+        }
+
+        .check-circle span {
+            color: darkgreen;
+            font-size: 16px;
+        }
+
+        .timer-section {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .timer-label {
+            font-weight: bold;
+        }
+
+        .timer-display {
+            margin-top: 5px;
+            font-size: 13px;
+            background-color: #eef0f5;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .time-remain.expired {
+            color: red;
+        }
+
+        .overtime {
+            color: red;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .category-symbol {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .navbar {
+            background-color: #1c2448;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+
+        .filter-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .filter-box input[type="text"],
+        .filter-box select {
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .filter-box button {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div><a href="{% url 'home' %}">SmartTasker</a></div>
+    <div>
+        <a href="{% url 'daily_tasks' %}">Daily Tasks</a>
+        <a href="{% url 'weekly_tasks' %}">Weekly Tasks</a>
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:none; border:none; color:white; font-weight:bold; margin-left:20px; cursor:pointer; text-decoration:none; font-family:inherit; font-size:inherit;">
+                Logout
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>This Week's Tasks</h1>
+        <p>{{ start_date|date:"F j" }} – {{ end_date|date:"F j, Y" }}</p>
+        <button onclick="toggleForm('new-task-form')" class="add-task-btn">+ Add New Task</button>
+    </div>
+
+    <form method="get">
+        <div class="filter-box">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search tasks..." 
+                value="{{ search_query }}"
+            >
+            <select name="category">
+                <option value="">Filter by category</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="save-btn">Apply</button>
+            {% if search_query or current_category %}
+                <a href="{% url 'weekly_tasks' %}" class="delete-btn" style="text-decoration: none;">Reset</a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div id="new-task-form" style="display:none;" class="task-form-container">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.title.label_tag }}
+            {{ form.title }}
+
+            {{ form.description.label_tag }}
+            {{ form.description }}
+
+            {{ form.deadline.label_tag }}
+            {{ form.deadline }}
+
+            {{ form.goal_date.label_tag }}
+            {{ form.goal_date }}
+
+            {{ form.category.label_tag }}
+            {{ form.category }}
+
+            {{ form.category_color.label_tag }}
+            {{ form.category_color }}
+
+            
+            <div class="time-input-group">
+                <label style="margin-right: 10px;">Estimated Duration:</label>
+                <input type="number" name="estimated_hours" min="0" placeholder="Hours">
+                <input type="number" name="estimated_minutes" min="0" max="59" placeholder="Minutes">
+                <input type="number" name="estimated_seconds" min="0" max="59" placeholder="Seconds">
+            </div>
+
+
+            <button type="submit" class="save-btn">Save Task</button>
+            <button type="button" class="delete-btn" onclick="toggleForm('new-task-form')">Cancel</button>
+        </form>
+    </div>
+
+    {% for day, tasks in tasks_by_day.items %}
+        <div class="day-header">{{ day }} - {{ week_day_dates|dict_get:day|date:"F j, Y" }}</div>
+        {% for task in tasks %}
+            <div class="task-card {% if task.is_completed %}completed{% endif %}">
+                <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="check-circle {% if task.is_completed %}completed{% endif %}" title="Toggle complete">
+                        {% if task.is_completed %}<span>✔</span>{% endif %}
+                    </button>
+                </form>
+                <div class="task-details">
+                    <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="task-desc">{{ task.description }}</div>
+                    <div class="date-info">
+                        {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                        {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                        {% if task.category %} | Category: {{ task.category }}{% endif %}
+                        {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
+                        {% with info=running_timers|dict_get:task.id %}
+                        {% endwith %}
+                        {% if task.is_completed %} | Spent: {{ spent_times|dict_get:task.id|seconds_to_hms }}{% endif %}
+                    </div>
+                    <div class="action-buttons" style="margin-top: 10px;">
+                        <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                        <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
+
+                    <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
+                        <form method="post" action="{% url 'edit_task' task.id %}">
+                            {% csrf_token %}
+                            <p>
+                                <label>Title:</label><br>
+                                <input type="text" name="title" value="{{ task.title }}">
+                            </p>
+                            <p>
+                                <label>Description:</label><br>
+                                <textarea name="description">{{ task.description }}</textarea>
+                            </p>
+                            <p>
+                                <label>Deadline:</label><br>
+                                <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
+                            </p>
+                            <p>
+                                <label>Goal date:</label><br>
+                                <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
+                            </p>
+                            <div class="time-input-group">
+                                <label style="margin-right: 10px;">Estimated Duration:</label>
+                                <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
+                                <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
+                                <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
+                            </div>
+                            <p>
+                                <label>Category:</label><br>
+                                <input type="text" name="category" value="{{ task.category }}">
+                            </p>
+                            <p>
+                                <label>Category color:</label><br>
+                                <input type="color" name="category_color" value="{{ task.category_color }}">
+                            </p>
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
+                        </form>
+                    </div>
+
+                    <div class="timer-section">
+                        <div class="timer-label">Time Remaining</div>
+                        <div id="timer-display-{{ task.id }}" class="timer-display">{{ task.estimated_time|seconds_to_hms }}</div>
+                        <span id="overtime-display-{{ task.id }}" class="overtime" style="display:none;"></span>
+                        <div class="action-buttons" style="margin-top: 10px;">
+                            <button onclick="startTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="add-task-btn">Start</button>
+                            <button onclick="pauseTimer({{ task.id }})" class="add-task-btn">Pause</button>
+                            <button onclick="stopTimer({{ task.id }}, {{ task.estimated_time|default:0 }})" class="delete-btn">Stop</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <h2 class="section-title">Completed Tasks</h2>
+    {% for task in completed_tasks %}
+        <div class="task-card completed">
+            <form method="post" action="{% url 'toggle_task_complete' task.id %}">
+                {% csrf_token %}
+                <button type="submit" class="check-circle completed" title="Mark as incomplete">
+                    <span>✔</span>
+                </button>
+            </form>
+            <div class="task-details">
+                <div class="category-symbol" style="color: {{ task.category_color }}">ᯓ★ˎˊ˗</div>
+                <div class="task-title">{{ task.title }}</div>
+                <div class="task-desc">{{ task.description }}</div>
+                <div class="date-info">
+                    {% if task.deadline %}Due: {{ task.deadline|date:"F j, Y" }}{% endif %}
+                    {% if task.goal_date %} | Goal: {{ task.goal_date|date:"F j, Y" }}{% endif %}
+                    {% if task.category %} | Category: {{ task.category }}{% endif %}
+                    {% if task.estimated_time %} | Est: {{ task.estimated_time|seconds_to_hms }}{% endif %}
+                    | Spent: {{ spent_times|dict_get:task.id|seconds_to_hms }}
+                </div>
+                <div class="action-buttons" style="margin-top: 10px;">
+                    <button class="edit-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Edit</button>
+                    <form method="post" action="{% url 'delete_task' task.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-btn">Delete</button>
+                    </form>
+                </div>
+                <div id="edit-form-{{ task.id }}" class="edit-form task-form-container">
+                    <form method="post" action="{% url 'edit_task' task.id %}">
+                        {% csrf_token %}
+                        <p>
+                            <label>Title:</label><br>
+                            <input type="text" name="title" value="{{ task.title }}">
+                        </p>
+                        <p>
+                            <label>Description:</label><br>
+                            <textarea name="description">{{ task.description }}</textarea>
+                        </p>
+                        <p>
+                            <label>Deadline:</label><br>
+                            <input type="date" name="deadline" value="{{ task.deadline|date:'Y-m-d' }}">
+                        </p>
+                        <p>
+                            <label>Goal date:</label><br>
+                            <input type="date" name="goal_date" value="{{ task.goal_date|date:'Y-m-d' }}">
+                        </p>
+                        <div class="time-input-group">
+                            <label style="margin-right: 10px;">Estimated Duration:</label>
+                            <input type="number" name="estimated_hours" min="0" value="{{ task.estimated_time|seconds_to_hours }}">
+                            <input type="number" name="estimated_minutes" min="0" max="59" value="{{ task.estimated_time|seconds_to_minutes }}">
+                            <input type="number" name="estimated_seconds" min="0" max="59" value="{{ task.estimated_time|seconds_to_seconds }}">
+                        </div>
+                        <p>
+                            <label>Category:</label><br>
+                            <input type="text" name="category" value="{{ task.category }}">
+                        </p>
+                        <p>
+                            <label>Category color:</label><br>
+                            <input type="color" name="category_color" value="{{ task.category_color }}">
+                        </p>
+                        <button type="submit" class="save-btn">Save Changes</button>
+                        <button type="button" class="delete-btn" onclick="toggleForm('edit-form-{{ task.id }}')">Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No tasks completed this week.</p>
+    {% endfor %}
+</div>
+
+<div style="text-align:center; margin-top: 20px;">
+    <a href="?week={{ week_offset|add:-1 }}" class="add-task-btn" style="margin-right: 10px;">Previous Week</a>
+    <a href="?week={{ week_offset|add:1 }}" class="add-task-btn">Next Week</a>
+</div>
+
+</div>
+
+<script>
+    // Toggle visibility for forms
+    function toggleForm(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = (el.style.display === "none" || el.style.display === "") ? "block" : "none";
+        }
+    }
+
+    const taskTitles = JSON.parse('{{ task_titles_json|escapejs }}');
+
+    // Format seconds as hh:mm:ss
+    function formatTime(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    // Object to hold timers state: taskId -> {remainingSeconds, overtimeSeconds, intervalId, running}
+    const timers = {};
+
+    // Format seconds to HH:MM:SS string
+    function formatTime(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+
+    // Load timers state from localStorage
+    function loadTimers() {
+        const saved = localStorage.getItem('taskCountdownTimers');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            for (const taskId in parsed) {
+                timers[taskId] = {
+                    remainingSeconds: parsed[taskId].remainingSeconds,
+                    overtimeSeconds: parsed[taskId].overtimeSeconds || 0,
+                    intervalId: null,
+                    running: parsed[taskId].running
+                };
+            }
+        }
+    }
+
+    // Save timers state to localStorage
+    function saveTimers() {
+        const toSave = {};
+        for (const taskId in timers) {
+            toSave[taskId] = {
+                remainingSeconds: timers[taskId].remainingSeconds,
+                overtimeSeconds: timers[taskId].overtimeSeconds || 0,
+                running: timers[taskId].running
+            };
+        }
+        localStorage.setItem('taskCountdownTimers', JSON.stringify(toSave));
+    }
+
+    // Update timer display on the page for a task
+    function updateDisplay(taskId) {
+        const display = document.getElementById(`timer-display-${taskId}`);
+        const overtimeEl = document.getElementById(`overtime-display-${taskId}`);
+        if (!display || !overtimeEl) return;
+
+        const timer = timers[taskId] || {};
+        const remaining = timer.remainingSeconds || 0;
+        const overtime = timer.overtimeSeconds || 0;
+
+        if (remaining > 0) {
+            display.textContent = `Time Remaining: ${formatTime(remaining)}`;
+            display.classList.remove('expired');
+            overtimeEl.style.display = 'none';
+        } else {
+            display.textContent = "Time Remaining: 00:00:00";
+            display.classList.add('expired');
+            overtimeEl.style.display = 'block';
+            overtimeEl.textContent = `Overtime: ${formatTime(overtime)}`;
+        }
+    }
+
+    // Start or resume countdown timer for taskId, estSeconds is the original estimated seconds
+    function startTimer(taskId, estSeconds) {
+        if (!timers[taskId]) {
+            timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
+        }
+        if (timers[taskId].running) return; // Already running
+
+        // Reset if timer was at zero
+        if (timers[taskId].remainingSeconds <= 0) {
+            timers[taskId].remainingSeconds = estSeconds;
+            timers[taskId].overtimeSeconds = 0;
+        }
+
+        timers[taskId].running = true;
+        timers[taskId].intervalId = setInterval(() => {
+            if (timers[taskId].remainingSeconds > 0) {
+                timers[taskId].remainingSeconds--;
+                if (timers[taskId].remainingSeconds === 0) {
+                    alert(`Time's up for task: "${taskTitles[taskId]}", click okay to start overtime timer`);
+                }
+            } else {
+                timers[taskId].overtimeSeconds++;
+            }
+
+            updateDisplay(taskId);
+            saveTimers();
+        }, 1000);
+
+        updateDisplay(taskId);
+        saveTimers();
+    }
+
+    // Pause the countdown timer
+    function pauseTimer(taskId) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
+            timers[taskId].intervalId = null;
+            timers[taskId].running = false;
+            saveTimers();
+        }
+    }
+
+    // Stop timer and reset to original estimated time
+    function stopTimer(taskId, estSeconds) {
+        if (timers[taskId]?.intervalId) {
+            clearInterval(timers[taskId].intervalId);
+        }
+        timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
+        updateDisplay(taskId);
+        saveTimers();
+    }
+
+    // On page load: initialize timers and restart running timers
+    window.addEventListener('load', () => {
+        loadTimers();
+
+        // Find all timer displays
+        document.querySelectorAll("[id^='timer-display-']").forEach(el => {
+            const taskId = el.id.replace('timer-display-', '');
+
+            // Initialize timers entry if missing
+            if (!timers[taskId]) {
+                // Try to read estSeconds from data attribute, fallback 0
+                const estSeconds = Number(el.dataset.estSeconds) || 0;
+                timers[taskId] = { remainingSeconds: estSeconds, overtimeSeconds: 0, intervalId: null, running: false };
+            }
+
+            updateDisplay(taskId);
+
+            // Restart intervals for running timers
+            if (timers[taskId].running && !timers[taskId].intervalId) {
+                timers[taskId].intervalId = setInterval(() => {
+                    if (timers[taskId].remainingSeconds > 0) {
+                        timers[taskId].remainingSeconds--;
+                        if (timers[taskId].remainingSeconds === 0) {
+                            alert(`Time's up for task: "${taskTitles[taskId]}", click okay to start overtime timer`);
+                        }
+                    } else {
+                        timers[taskId].overtimeSeconds++;
+                    }
+
+                    updateDisplay(taskId);
+                    saveTimers();
+                }, 1000);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

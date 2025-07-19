@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+import os
+import sys
+import django
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+# Setup Django environment
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smarttasker.settings')
+django.setup()
+
+from tasks.models import Task
+from timers.models import Timer
+from dashboard.models import DailySummary, WeeklySummary
+
+def generate_weekly_report():
+    """Generate a comprehensive weekly usage report"""
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=7)
+    
+    print(f"\n📊 SMARTTASKER WEEKLY REPORT")
+    print(f"📅 Period: {start_date} to {end_date}")
+    print("=" * 50)
+    
+    # Get timers from the past week
+    timers = Timer.objects.filter(
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date
+    ).select_related('task')
+    
+    if not timers.exists():
+        print("❌ No activity found for the past week.")
+        return
+    
+    # Calculate totals
+    total_minutes = sum(timer.duration for timer in timers if timer.duration)
+    completed_tasks = Task.objects.filter(
+        is_completed=True,
+        created_at__date__gte=start_date
+    ).count()
+    
+    # Daily breakdown
+    daily_data = defaultdict(lambda: {'minutes': 0, 'sessions': 0, 'tasks': set()})
+    task_totals = defaultdict(int)
+    
+    for timer in timers:
+        day = timer.created_at.date()
+        daily_data[day]['minutes'] += timer.duration or 0
+        daily_data[day]['sessions'] += 1
+        daily_data[day]['tasks'].add(timer.task.title)
+        task_totals[timer.task.title] += timer.duration or 0
+    
+    # Summary stats
+    print(f"⏱️  Total Time: {total_minutes // 60}h {total_minutes % 60}m")
+    print(f"✅ Completed Tasks: {completed_tasks}")
+    print(f"🎯 Work Sessions: {timers.count()}")
+    print(f"📈 Average Daily: {total_minutes // 7}m")
+    
+    # Daily breakdown
+    print(f"\n📅 DAILY BREAKDOWN")
+    print("-" * 30)
+    for day in sorted(daily_data.keys()):
+        data = daily_data[day]
+        hours, mins = divmod(data['minutes'], 60)
+        print(f"{day.strftime('%a %m/%d')}: {hours}h {mins}m ({data['sessions']} sessions)")
+    
+    # Top tasks
+    if task_totals:
+        print(f"\n🏆 TOP TASKS")
+        print("-" * 20)
+        for task, minutes in sorted(task_totals.items(), key=lambda x: x[1], reverse=True)[:5]:
+            hours, mins = divmod(minutes, 60)
+            print(f"{task}: {hours}h {mins}m")
+    
+    print("\n" + "=" * 50)
+
+if __name__ == "__main__":
+    generate_weekly_report()
