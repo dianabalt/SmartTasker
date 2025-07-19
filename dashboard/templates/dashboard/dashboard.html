@@ -7,6 +7,7 @@
     <title>Dashboard - SmartTasker</title>
     <link rel="icon" href="{% static 'images/rsz_stopwatch.png' %}" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/timers.js' %}"></script>
     <style>
       body {
         background-color: #2e376e;
@@ -185,11 +186,6 @@
         }
     });
 
-    function loadTimers() {
-        const stored = localStorage.getItem('taskCountdownTimers');
-        return stored ? JSON.parse(stored) : {};
-    }
-
     function updateChartAndStats() {
         const timers = loadTimers();
 
@@ -213,7 +209,7 @@
         document.getElementById('totalActualTimeDuplicate').textContent = formatted;
     }
 
-    setInterval(updateChartAndStats, 1000);
+    document.addEventListener('timersUpdated', updateChartAndStats);
     window.addEventListener('load', updateChartAndStats);
 </script>
 
