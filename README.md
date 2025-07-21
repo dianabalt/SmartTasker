@@ -59,7 +59,7 @@
 python manage.py test
 ```
 
-##HOW TO USE APP
+## HOW TO USE APP
 
 1. Create an Account or Log In
   - Start by registering a new account or logging in with your existing credentials.
