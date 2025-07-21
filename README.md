@@ -111,7 +111,7 @@ python manage.py test
     -   Live Graph: A bar chart showing, for each task, your original estimate (blue) vs. the actual time spent (red), combining time from both countdown and overtime timers.
 
 10. Navigate Easily
-    - Use the navigation bar to quickly move between Home, Daily Tasks, Weekly Tasks, Dashboard, and Logout.
+  - Use the navigation bar to quickly move between Home, Daily Tasks, Weekly Tasks, Dashboard, and Logout.
 
 TIPS:
 - You can edit or delete any task at any time by clicking the corresponding button.
