@@ -3,19 +3,19 @@
 **SmartTasker** is a Django based productivity app that helps you manage daily work using the Pomodoro technique. It organizes tasks, tracks time and provides summaries so you can stay focused and analyze your productivity.
 
 ## Features
-- **Tasks app**
+- **Tasks layout**
   - Add, edit and delete tasks
   - Mark tasks as complete
   - Categorize tasks with custom tags
-- **Timer app**
+- **Timer feature**
   - Pomodoro style timers for each task
   - Start, pause and stop timers
   - Record the time spent on every task
-- **Dashboard app**
+- **Dashboard page**
   - Daily and weekly productivity summaries
   - Compare estimated versus actual time
   - Charts to visualize progress
-- **Account app**
+- **Easy account set up and access**
   - User registration, login and logout
   - Keeps all task, timer and summary data scoped to each user
 
