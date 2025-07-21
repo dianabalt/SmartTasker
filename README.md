@@ -73,8 +73,8 @@ python manage.py test
   - To review or edit tasks from previous weeks, use the Previous Week button.
 
 4. Search and Filter Tasks
-   - Use the search bar at the top of the Daily or Weekly Tasks page to quickly find any task by task title (task name).
-   - If you use different categories for your tasks, you can filter tasks by category. The filter dropdown only shows categories that actually exist in your current tasks.
+  - Use the search bar at the top of the Daily or Weekly Tasks page to quickly find any task by task title (task name).
+  - If you use different categories for your tasks, you can filter tasks by category. The filter dropdown only shows categories that actually exist in your current tasks.
   
 5. Add and Edit Task Details
 - When adding or editing a task, you can set:
