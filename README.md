@@ -99,8 +99,8 @@ python manage.py test
   -  Both timers are always kept in sync—whether you’re on the Daily, Weekly Tasks page, or the Dashboard
 
 8. Complete Tasks
-   - When you finish a task, click the circle icon to the left of the task.
-   - Completed tasks will be moved to the “Completed Tasks” section, grayed out, and display a green check mark.
+  - When you finish a task, click the circle icon to the left of the task.
+  - Completed tasks will be moved to the “Completed Tasks” section, grayed out, and display a green check mark.
 
 9. View Dashboard and Analytics
   - Go to the Dashboard page to see live stats and visualizations, including:
